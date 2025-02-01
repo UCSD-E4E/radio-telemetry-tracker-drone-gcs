@@ -10,6 +10,12 @@ export const useSimulatorShortcut = () => {
                 e.preventDefault(); // Prevent default browser behavior
                 setIsSimulatorOpen(prev => !prev);
             }
+
+            // Check for Cmd+Shift+S (Mac)
+            if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 's') {
+                e.preventDefault(); // Prevent default browser behavior
+                setIsSimulatorOpen(prev => !prev);
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
