@@ -12,7 +12,7 @@ import { GlobalAppContext } from './globalAppContextDef';
 import type { Map as LeafletMap } from 'leaflet';
 import { fetchBackend, FrequencyData } from '../utils/backend';
 import { logToPython } from '../utils/logging';
-import { GCSState } from './globalAppTypes';
+import { GCSState } from './globalAppTypes'; 
 
 const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Internet & Map Status
