@@ -21,6 +21,15 @@ export interface FrequencyData {
     }
 }
 
+export interface TrackingSession {
+    id: number;
+    name: string;
+    description?: string; 
+    createdAt: string; 
+    updatedAt: string; 
+}
+
+
 export interface DroneBackend {
     // Connection
     get_serial_ports(): Promise<string[]>;
@@ -37,6 +46,9 @@ export interface DroneBackend {
     // Data signals
     gps_data_updated: Signal<GpsData>;
     frequency_data_updated: Signal<FrequencyData>;
+
+    // Tracking Session Signal 
+    tracking_session_updated: Signal<TrackingSession[]>;
 
     // Fatal error signal
     fatal_error: Signal<void>;
@@ -73,6 +85,14 @@ export interface DroneBackend {
     remove_poi(name: string): Promise<boolean>;
     rename_poi(oldName: string, newName: string): Promise<boolean>;
     pois_updated: Signal<POI[]>;
+
+    // Tracking Session's 
+    add_tracking_session(name: string, description: string): Promise<boolean>;
+    remove_tracking_session(id: number): Promise<boolean>;
+    get_tracking_sessions(): Promise<TrackingSession[]>;
+    add_frequency(frequency: number, signal_strength: number, tracking_session_id: number): Promise<boolean>;
+    remove_frequency(id: number): Promise<boolean>;
+    get_frequencies_by_session(id: number): Promise<FrequencyData>;
 
     // Config and Control
     send_config_request(config: PingFinderConfig): Promise<boolean>;

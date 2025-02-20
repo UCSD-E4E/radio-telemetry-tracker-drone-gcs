@@ -556,7 +556,7 @@ class CommunicationBridge(QObject):
             # Add the tracking session through FrequencyService
             success = self._frequency_service.add_tracking_session(name, description)
             if success:
-                self.tracking_session_updated.emit(QVariant(self._frequency_service.get_tracking_sessions()))
+                self.tracking_session_updated.emit(self._frequency_service.get_tracking_sessions())
             return success
         except Exception:
             logging.exception("Error adding tracking session")
@@ -603,7 +603,19 @@ class CommunicationBridge(QObject):
         except Exception:
             logging.exception("Error removing frequency")
             return False
-        
+    
+    # Slot to get all tracking sessions
+    @pyqtSlot(result=list)
+    def get_tracking_sessions(self) -> list:
+        """Get all tracking sessions."""
+        try:
+            sessions = self._frequency_service.get_tracking_sessions()  # Get tracking sessions from the service
+            return sessions  # Return the list of tracking sessions
+        except Exception:
+            logging.exception("Error retrieving tracking sessions")
+            return []
+
+
     @pyqtSlot(str, result=list)
     def get_frequencies_by_session_name(self, session_name: str) -> list:
         """Get frequencies for a tracking session by its name."""
