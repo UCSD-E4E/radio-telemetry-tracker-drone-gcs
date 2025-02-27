@@ -71,4 +71,15 @@ export interface TileOptions {
     offline: boolean;
 }
 
+export interface FrequencyRecord {
+    frequency: number;
+    data_type: "ping" | "location_estimate";
+    latitude: number;
+    longitude: number;
+    amplitude: number | null;
+    timestamp: number;
+}
+
+export type TrackingSession = FrequencyRecord[];
+
 export { };

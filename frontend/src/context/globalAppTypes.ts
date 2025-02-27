@@ -2,7 +2,7 @@ import type { Map } from 'leaflet';
 import type { RefObject } from 'react';
 import type { GpsData, POI, TileInfo, RadioConfig } from '../types/global';
 import type { MapSource } from '../utils/mapSources';
-import { FrequencyData } from '../utils/backend';
+import { FrequencyData, TrackingSession } from '../utils/backend';
 import type { ConnectionQualityState } from '../hooks/useConnectionQuality';
 import type { GCSStateMachineState } from '../hooks/useGCSStateMachine';
 
@@ -74,6 +74,10 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     addPOI: (name: string, coords: [number, number]) => Promise<boolean>;
     removePOI: (name: string) => Promise<boolean>;
     clearTileCache: () => Promise<boolean>;
+
+    //Tracking Session 
+    get_frequencies_by_session: (sessionName: string) => Promise<TrackingSession>;
+    save_frequencies_to_session: (sessionName: string, sessionDate: string, frequencies: TrackingSession) => Promise<number>;
 
     // GPS data
     gpsData: GpsData | null;

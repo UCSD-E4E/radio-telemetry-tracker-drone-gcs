@@ -10,7 +10,7 @@ import { OFFLINE_MODE_KEY } from '../utils/mapSources';
 import { TileInfo } from '../types/global';
 import { GlobalAppContext } from './globalAppContextDef';
 import type { Map as LeafletMap } from 'leaflet';
-import { fetchBackend, FrequencyData } from '../utils/backend';
+import { fetchBackend, FrequencyData, TrackingSession } from '../utils/backend';
 import { logToPython } from '../utils/logging';
 import { GCSState } from './globalAppTypes'; 
 
@@ -197,6 +197,28 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
             return false;
         }
     }, []);
+
+    //Tracking Session 
+    const get_frequencies_by_session = useCallback(async (sessionName: string) => {
+        if (!window.backend) throw new Error("Backend not available");
+        try {
+            return await window.backend.get_frequencies_by_session(sessionName);
+        } catch (err) {
+            console.error('Error fetching frequencies for session:', err);
+           throw err; 
+        }
+    }, []);
+    
+    const save_frequencies_to_session = useCallback(async (sessionName: string, sessionDate: string, frequencies: TrackingSession) => {
+        if (!window.backend) return -1;
+        try {
+            return await window.backend.save_frequencies_to_session(sessionName, sessionDate, frequencies);
+        } catch (err) {
+            console.error('Error saving tracking session:', err);
+            return -1;
+        }
+    }, []);
+
 
     const clearTileCache = useCallback(async () => {
         if (!window.backend) return false;
@@ -426,6 +448,10 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         addPOI,
         removePOI,
         clearTileCache,
+
+        //TrackingSession
+        get_frequencies_by_session, 
+        save_frequencies_to_session
 
         // GPS Data
         gpsData,
