@@ -87,9 +87,7 @@ class CommunicationBridge(QObject):
     # Simulator
     simulator_started = pyqtSignal()
     simulator_stopped = pyqtSignal()
-
-    #Tracking Sessions 
-    tracking_session_updated = pyqtSignal(QVariant)
+    
 
     def __init__(self) -> None:
         """Initialize the communication bridge with data manager and services."""
@@ -547,85 +545,18 @@ class CommunicationBridge(QObject):
     # --------------------------------------------------------------------------
     # Frequency and Tracking Session Bridging
     # --------------------------------------------------------------------------
-   
-    # Slot to add a tracking session
-    @pyqtSlot(str, str, result=bool)
-    def add_tracking_session(self, name: str, description: str) -> bool:
-        """Add a new tracking session."""
-        try:
-            # Add the tracking session through FrequencyService
-            success = self._frequency_service.add_tracking_session(name, description)
-            if success:
-                self.tracking_session_updated.emit(self._frequency_service.get_tracking_sessions())
-            return success
-        except Exception:
-            logging.exception("Error adding tracking session")
-            return False
 
-    # Slot to remove a tracking session
-    @pyqtSlot(int, result=bool)
-    def remove_tracking_session(self, session_id: int) -> bool:
-        """Remove a tracking session."""
-        try:
-            # Remove the tracking session through FrequencyService
-            success = self._frequency_service.remove_tracking_session(session_id)
-            if success:
-                self.tracking_session_updated.emit(QVariant(self._frequency_service.get_tracking_sessions()))
-            return success
-        except Exception:
-            logging.exception("Error removing tracking session")
-            return False
+    @pyqtSlot(str, result=QVariant)
+    def get_frequencies_by_session(self, session_name: str) -> QVariant:
+        """Retrieve frequencies and return them to the frontend."""
+        return QVariant(self._frequency_service.get_frequencies_by_session(session_name))
 
-    # Slot to add a frequency reading to a tracking session
-    @pyqtSlot(float, float, int, result=bool)
-    def add_frequency(self, frequency: float, signal_strength: float, tracking_session_id: int) -> bool:
-        """Add a frequency reading to the specified tracking session."""
-        try:
-            success = self._frequency_service.add_frequency(frequency, signal_strength, tracking_session_id)
-            if success:
-                # Optionally, emit updated frequency data if needed
-                self.frequency_data_updated.emit(QVariant(self._frequency_service.get_frequencies()))
-            return success
-        except Exception:
-            logging.exception("Error adding frequency")
-            return False
+    @pyqtSlot(str, str, QVariant, result=int)
+    def save_frequencies_to_session(self, session_name: str, session_date: str, frequencies: QVariant) -> int:
+        """Save frequencies and return the session ID."""
+        frequency_list = frequencies # Convert QVariant to Python list
+        return self._frequency_service.save_frequencies_to_session(session_name, session_date, frequency_list)
 
-    # Slot to remove a frequency from a tracking session
-    @pyqtSlot(int, result=bool)
-    def remove_frequency(self, frequency_id: int) -> bool:
-        """Remove a frequency reading by its ID."""
-        try:
-            success = self._frequency_service.remove_frequency(frequency_id)
-            if success:
-                # Optionally, emit updated frequency data if needed
-                self.frequency_data_updated.emit(QVariant(self._frequency_service.get_frequencies()))
-            return success
-        except Exception:
-            logging.exception("Error removing frequency")
-            return False
-    
-    # Slot to get all tracking sessions
-    @pyqtSlot(result=list)
-    def get_tracking_sessions(self) -> list:
-        """Get all tracking sessions."""
-        try:
-            sessions = self._frequency_service.get_tracking_sessions()  # Get tracking sessions from the service
-            return sessions  # Return the list of tracking sessions
-        except Exception:
-            logging.exception("Error retrieving tracking sessions")
-            return []
-
-
-    @pyqtSlot(str, result=list)
-    def get_frequencies_by_session_name(self, session_name: str) -> list:
-        """Get frequencies for a tracking session by its name."""
-        try:
-            frequencies = self._frequency_service.get_frequencies_by_tracking_session_name(session_name)
-            return frequencies  # Return the list of frequencies
-        except Exception:
-            logging.exception("Error retrieving frequencies for session: %s", session_name)
-            return []
-    
     # --------------------------------------------------------------------------
     # LAYERS
     # --------------------------------------------------------------------------

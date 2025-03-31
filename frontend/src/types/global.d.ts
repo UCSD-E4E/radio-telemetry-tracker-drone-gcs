@@ -71,6 +71,13 @@ export interface TileOptions {
     offline: boolean;
 }
 
+export interface FrequencyData {
+    [frequency: number]: {
+        pings: PingData[];
+        locationEstimate: LocEstData | null;
+    }
+}
+
 export interface FrequencyRecord {
     frequency: number;
     data_type: "ping" | "location_estimate";

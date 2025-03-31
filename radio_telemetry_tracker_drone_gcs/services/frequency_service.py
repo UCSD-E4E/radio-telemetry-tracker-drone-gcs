@@ -1,16 +1,12 @@
 import logging
 from typing import Any
-
 from radio_telemetry_tracker_drone_gcs.services.frequency_db import (
-    add_tracking_session_db,
     init_db,
-    list_tracking_sessions_db,
-    remove_tracking_session_db,
-    add_frequency_db,
-    list_frequencies_db,
-    remove_frequency_db,
-    get_tracking_session_id_by_name,
-    get_frequencies_by_tracking_session_id,
+    add_tracking_session,
+    add_frequency,
+    get_session_id_by_name, 
+    get_frequencies_by_session, 
+    save_frequencies_to_session,
 )
 
 
@@ -21,81 +17,77 @@ class FrequencyService:
         """Initialize the Frequency service by initializing the database."""
         init_db()
 
-    def get_tracking_sessions(self) -> list[dict[str, Any]]:
-        """Get all tracking sessions from the database."""
-        return list_tracking_sessions_db()
-
-    def add_tracking_session(self, name: str, description: str) -> bool:
+    def add_tracking_session(self, name: str, date: str) -> int:
         """Add a new tracking session to the database.
 
         Args:
             name: Name of the tracking session
-            description: Description of the tracking session
+            date: Date of the tracking session
 
         Returns:
-            bool: True if tracking session was added successfully, False otherwise
+            int: The ID of the newly created tracking session
         """
         try:
-            return add_tracking_session_db(name, description)
+            return add_tracking_session(name, date)
         except Exception:
             logging.exception("Error adding tracking session")
-            return False
+            return -1
 
-    def remove_tracking_session(self, session_id: int) -> bool:
-        """Remove a tracking session from the database.
-
-        Args:
-            session_id: ID of the tracking session to remove
-
-        Returns:
-            bool: True if tracking session was removed successfully, False otherwise
-        """
-        try:
-            return remove_tracking_session_db(session_id)
-        except Exception:
-            logging.exception("Error removing tracking session")
-            return False
-
-    def get_frequencies(self) -> list[dict[str, Any]]:
-        """Get all frequency records from the database."""
-        return list_frequencies_db()
-
-    def add_frequency(self, frequency: float, signal_strength: float, tracking_session_id: int) -> bool:
-        """Add a frequency reading to a tracking session in the database.
+    def add_frequency(self, frequency: int, data_type: str, latitude: float, longitude: float, amplitude: float, session_name: str, timestamp: int) -> bool:
+        """Add a frequency record to a specific tracking session.
 
         Args:
-            frequency: The frequency value (Hz)
-            signal_strength: The signal strength value (dB)
-            tracking_session_id: The associated tracking session ID
+            frequency: Frequency value (Hz)
+            data_type: Type of the frequency data ('ping' or 'location_estimate')
+            latitude: Latitude of the frequency record
+            longitude: Longitude of the frequency record
+            amplitude: Amplitude of the frequency
+            session_name: Name of the tracking session
+            timestamp: Timestamp for the frequency record
 
         Returns:
-            bool: True if frequency was added successfully, False otherwise
+            bool: True if the frequency was added successfully, False otherwise
         """
+        session_id = get_session_id_by_name(session_name)
+        if session_id == -1:
+            logging.error(f"Session '{session_name}' not found.")
+            return False
+
         try:
-            return add_frequency_db(frequency, signal_strength, tracking_session_id)
+            return add_frequency(frequency, data_type, latitude, longitude, amplitude, session_id, timestamp)
         except Exception:
             logging.exception("Error adding frequency")
             return False
 
-    def remove_frequency(self, frequency_id: int) -> bool:
-        """Remove a frequency record from the database.
+    def save_frequencies_to_session(self, session_name: str, session_date: str, frequencies: list[dict]) -> int:
+        """Create a new tracking session and save the frequencies associated with it.
 
         Args:
-            frequency_id: ID of the frequency record to remove
+            session_name: Name of the tracking session
+            session_date: Date of the tracking session
+            frequencies: List of frequency data (dict with frequency details)
 
         Returns:
-            bool: True if frequency was removed successfully, False otherwise
+            int: The ID of the created tracking session or -1 if an error occurred
         """
         try:
-            return remove_frequency_db(frequency_id)
+            return save_frequencies_to_session(session_name, session_date, frequencies)
         except Exception:
-            logging.exception("Error removing frequency")
-            return False
-        
-    # New method to get frequency data by tracking session name
-    def get_frequencies_by_tracking_session_name(self, session_name: str) -> list[dict[str, Any]]:
-        """Get frequencies for a tracking session by its name."""
-        tracking_session_id = get_tracking_session_id_by_name(session_name)
-        if tracking_session_id:
-            return get_frequencies_by_tracking_session_id(tracking_session_id)
-        return []
+            logging.exception("Error saving frequencies to session")
+            return -1
+
+    def get_frequencies_by_session(self, session_name: str) -> list[dict[str, Any]]:
+        """Retrieve all frequency records for a specific tracking session.
+
+        Args:
+            session_name: Name of the tracking session
+
+        Returns:
+            list[dict]: List of frequency data for the session
+        """
+        try:
+            return get_frequencies_by_session(session_name)
+        except Exception:
+            logging.exception("Error retrieving frequencies for session")
+            return []
+

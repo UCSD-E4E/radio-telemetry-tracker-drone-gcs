@@ -451,7 +451,7 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
         //TrackingSession
         get_frequencies_by_session, 
-        save_frequencies_to_session
+        save_frequencies_to_session,
 
         // GPS Data
         gpsData,
