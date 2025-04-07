@@ -28,6 +28,7 @@ export interface FrequencyRecord {
     longitude: number;
     amplitude: number | null;
     timestamp: number;
+    packet_idts: number; 
 }
 
 export type TrackingSession = FrequencyRecord[];
@@ -88,7 +89,6 @@ export interface DroneBackend {
     //Tracking Session 
     get_frequencies_by_session(sessionName: string): Promise<TrackingSession>;
     save_frequencies_to_session(sessionName: string, sessionDate: string, frequencies: TrackingSession): Promise<number>;
-
 
     // Config and Control
     send_config_request(config: PingFinderConfig): Promise<boolean>;

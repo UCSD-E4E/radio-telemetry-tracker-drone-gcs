@@ -65,6 +65,10 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     tileInfo: TileInfo | null;
     pois: POI[];
     frequencyData: FrequencyData;
+    
+    // Need function to set the frequency data
+    setFrequencyData?: (data: FrequencyData) => void;
+
     deleteFrequencyLayer: (frequency: number) => void;
     deleteAllFrequencyLayers: () => void;
     frequencyVisibility: FrequencyLayerVisibility[];

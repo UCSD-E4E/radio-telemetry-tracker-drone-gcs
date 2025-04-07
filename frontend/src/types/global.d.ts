@@ -85,6 +85,7 @@ export interface FrequencyRecord {
     longitude: number;
     amplitude: number | null;
     timestamp: number;
+    packet_idts: number; 
 }
 
 export type TrackingSession = FrequencyRecord[];

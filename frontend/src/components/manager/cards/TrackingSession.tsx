@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { GlobalAppContext } from "../../../context/globalAppContextDef";
-import type { TrackingSession, FrequencyData, PingData, FrequencyRecord } from "../../../types/global";
+import type { TrackingSession, FrequencyData, PingData, FrequencyRecord, LocEstData } from "../../../types/global";
 import Card from "../../common/Card";
 
 const TrackingSessionComponent: React.FC = () => {
@@ -15,9 +15,15 @@ const TrackingSessionComponent: React.FC = () => {
 
     const [sessionName, setSessionName] = useState("");
     const [sessionDate, setSessionDate] = useState("");
-    const [loadedData, setLoadedData] = useState<TrackingSession | null>(null);
+    const [loadedData, setLoadedData] = useState<FrequencyRecord[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+    // Log updated frequencyData whenever it changes
+    useEffect(() => {
+        console.log("Updated frequencyData:", context?.frequencyData);
+    }, [context?.frequencyData]); // This will run whenever frequencyData changes
+    
 
     // Function to map FrequencyData to TrackingSession format
     const convertFrequencyDataToTrackingSession = (frequencyData: FrequencyData): TrackingSession => {
@@ -27,8 +33,9 @@ const TrackingSessionComponent: React.FC = () => {
                 data_type: "ping",
                 latitude: ping.lat,
                 longitude: ping.long,
-                amplitude: ping.amplitude ?? null,
-                timestamp: ping.timestamp,
+                amplitude: ping.amplitude ?? 0,
+                timestamp: ping.timestamp,       
+                packet_idts: ping.packet_id,   
             }))
         );
     };
@@ -61,6 +68,37 @@ const TrackingSessionComponent: React.FC = () => {
         setIsLoading(false);
     };
 
+    // Convert tracking session data to frequency data 
+
+    const convertTrackingSessionToFrequencyData = (session: TrackingSession): FrequencyData => {
+        const result: Record<string, { frequency: number; pings: PingData[], locationEstimate: LocEstData | null}> = {};
+
+        for (const record of session) {
+            const freq = record.frequency.toString();
+    
+            if (!result[freq]) {
+                result[freq] = {
+                    frequency: record.frequency,
+                    pings: [],
+                    locationEstimate: null,
+                };
+            }
+    
+            if (record.data_type === "ping") {
+                result[freq].pings.push({
+                    lat: record.latitude,
+                    long: record.longitude,
+                    amplitude: record.amplitude ?? 0,
+                    timestamp: record.timestamp,
+                    frequency: record.frequency,
+                    packet_id: record.packet_idts// or a number type depending on your definition
+                });
+            }
+        }
+    
+        return result;
+    };
+
     // Handler for loading frequency data
     const handleLoad = async () => {
         if (!sessionName) {
@@ -77,6 +115,25 @@ const TrackingSessionComponent: React.FC = () => {
                 alert("No data found for this session.");
             } else {
                 setLoadedData(data);
+                const newFrequencyData = convertTrackingSessionToFrequencyData(data);
+                console.log("OLD")
+                console.log(context?.frequencyData); 
+
+                const mergedData = { ...context?.frequencyData };
+
+                for (const freq in newFrequencyData) {
+                    if (!mergedData[freq]) {
+                        mergedData[freq] = newFrequencyData[freq];
+                    } else {
+                        mergedData[freq].pings.push(...newFrequencyData[freq].pings);
+                    }
+                }
+                
+                context?.setFrequencyData?.(mergedData);
+                console.log("NEW")
+                console.log(context?.frequencyData); 
+
+
             }
         } catch (error) {
             console.error("Error loading session:", error);

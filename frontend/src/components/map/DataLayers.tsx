@@ -192,7 +192,8 @@ const FrequencyLayer: React.FC<FrequencyLayerProps> = ({
         };
     }, [map, frequency, locationEstimate, visible_location_estimate, frequencyColor]);
 
-    return null;
+    return null; 
+
 };
 
 const DroneMarker: React.FC<{
@@ -355,6 +356,7 @@ const DataLayers: React.FC = () => {
             if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         };
     }, [map]);
+
 
     return (
         <>
