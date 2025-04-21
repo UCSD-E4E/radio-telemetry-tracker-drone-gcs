@@ -64,15 +64,15 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     mapSources: MapSource[];
     tileInfo: TileInfo | null;
     pois: POI[];
-    frequencyData: FrequencyData;
-    
-    // Need function to set the frequency data
-    setFrequencyData?: (data: FrequencyData) => void; 
+    frequencyData: FrequencyData; 
+    frequencyData1: FrequencyData; //tracking session loaded data 
 
     deleteFrequencyLayer: (frequency: number) => void;
     deleteAllFrequencyLayers: () => void;
     frequencyVisibility: FrequencyLayerVisibility[];
     setFrequencyVisibility: (visibility: FrequencyLayerVisibility[]) => void;
+    frequencyVisibility1: FrequencyLayerVisibility[]; //tracking session loaded data visibility
+    setFrequencyVisibility1: (visibility: FrequencyLayerVisibility[]) => void; //tracking session loaded data visibility
     mapRef: RefObject<Map | null>;
     loadPOIs: () => Promise<void>;
     addPOI: (name: string, coords: [number, number]) => Promise<boolean>;

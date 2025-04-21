@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext} from "react";
 import { GlobalAppContext } from "../../../context/globalAppContextDef";
 import type { TrackingSession, FrequencyData, PingData, FrequencyRecord } from "../../../types/global";
 import Card from "../../common/Card";
@@ -11,7 +11,7 @@ const TrackingSessionComponent: React.FC = () => {
     const get_frequencies_by_session = context?.get_frequencies_by_session ?? (() => Promise.resolve([]));
 
     // Global frequency data
-    const frequencyData = context?.frequencyData ?? {};
+    const frequencyData = context?.frequencyData ?? {}; 
 
     const [sessionName, setSessionName] = useState("");
     const [sessionDate, setSessionDate] = useState("");
@@ -29,6 +29,7 @@ const TrackingSessionComponent: React.FC = () => {
                 longitude: ping.long,
                 amplitude: ping.amplitude ?? null,
                 timestamp: ping.timestamp,
+                packet_idts: ping.packet_id, 
             }))
         );
     };
@@ -67,12 +68,9 @@ const TrackingSessionComponent: React.FC = () => {
             alert("Please provide a session name to load.");
             return;
         }
-
         setIsLoading(true);
-
         try {
             const data = await get_frequencies_by_session(sessionName);
-
             if (data.length === 0) {
                 alert("No data found for this session.");
             } else {
@@ -82,9 +80,8 @@ const TrackingSessionComponent: React.FC = () => {
             console.error("Error loading session:", error);
             alert("Failed to load session.");
         }
-
         setIsLoading(false);
-    };
+    }; 
 
     return (
         <div className="modal">
