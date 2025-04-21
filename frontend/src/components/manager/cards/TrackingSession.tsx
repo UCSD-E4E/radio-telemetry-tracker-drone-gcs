@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { GlobalAppContext } from "../../../context/globalAppContextDef";
 import Card from "../../common/Card";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 
 const TrackingSessionComponent: React.FC = () => {
     const context = useContext(GlobalAppContext);
@@ -72,7 +73,7 @@ const TrackingSessionComponent: React.FC = () => {
     const handleClickSessionName = async (name: string) => {
         setIsLoading(true);
         try {
-            await get_frequencies_by_session(name); // this should update map already
+            await get_frequencies_by_session(name);
             setLoadedSessionNames(prev => [...new Set([...prev, name])]);
             setShowSessionListModal(false);
         } catch (err) {
@@ -83,76 +84,97 @@ const TrackingSessionComponent: React.FC = () => {
     };
 
     const handleRemoveLoadedSession = (name: string) => {
-        // You’ll add the logic to remove from map later
         setLoadedSessionNames(prev => prev.filter(n => n !== name));
     };
 
     return (
-        <div className="modal">
-            <div className="modal-content">
-                <h2>Manage Tracking Session</h2>
-
-                {/* Save Section */}
-                <input
-                    type="text"
-                    placeholder="Session Name"
-                    value={sessionName}
-                    onChange={(e) => setSessionName(e.target.value)}
-                    className="input-field"
-                />
-                <input
-                    type="date"
-                    value={sessionDate}
-                    onChange={(e) => setSessionDate(e.target.value)}
-                    className="input-field"
-                />
-
-                <div className="modal-actions">
-                    <button onClick={handleSave} disabled={isLoading} className="save-button">
-                        {isLoading ? "Saving..." : "Save Session"}
-                    </button>
-                    <button onClick={handleOpenLoadSession} disabled={isLoading} className="load-button">
-                        {isLoading ? "Loading..." : "Load Session"}
-                    </button>
-                </div>
-
-                {showSuccessMessage && (
-                    <div className="success-message">
-                        Tracking session successfully saved!
+        <div className="p-4 space-y-6">
+            <Card title="Tracking Session">
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input
+                            type="text"
+                            placeholder="Session Name"
+                            value={sessionName}
+                            onChange={(e) => setSessionName(e.target.value)}
+                            className="input input-bordered w-full"
+                        />
+                        <input
+                            type="date"
+                            value={sessionDate}
+                            onChange={(e) => setSessionDate(e.target.value)}
+                            className="input input-bordered w-full"
+                        />
                     </div>
-                )}
 
-                {/* Loaded Sessions Display */}
-                {loadedSessionNames.length > 0 && (
-                    <Card title="Loaded Sessions">
-                        <ul className="loaded-session-list">
-                            {loadedSessionNames.map((name) => (
-                                <li key={name} className="loaded-session-item">
+                    <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                        <button
+                            onClick={handleSave}
+                            disabled={isLoading}
+                            className="btn btn-primary w-full sm:w-auto"
+                        >
+                            {isLoading ? "Saving..." : "Save Session"}
+                        </button>
+                        <button
+                            onClick={handleOpenLoadSession}
+                            disabled={isLoading}
+                            className="btn btn-secondary w-full sm:w-auto"
+                        >
+                            {isLoading ? "Loading..." : "Load Session"}
+                        </button>
+                    </div>
+
+                    {showSuccessMessage && (
+                        <div className="text-green-600 text-sm">
+                            ✅ Tracking session successfully saved!
+                        </div>
+                    )}
+                </div>
+            </Card>
+
+            {loadedSessionNames.length > 0 && (
+                <Card title="Loaded Sessions">
+                    <ul className="space-y-2">
+                        {loadedSessionNames.map((name) => (
+                            <li key={name} className="flex justify-between items-center p-2 rounded-lg border bg-white shadow-sm hover:shadow-md">
+                                <span className="text-sm text-gray-800">{name}</span>
+                                <button
+                                    onClick={() => handleRemoveLoadedSession(name)}
+                                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition"
+                                    aria-label="Remove session"
+                                >
+                                    <XMarkIcon className="h-4 w-4" />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+            )}
+
+            {showSessionListModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl space-y-4">
+                        <h3 className="text-lg font-semibold">Select Session to Load</h3>
+                        <ul className="divide-y divide-gray-200">
+                            {allSessionNames.map((name) => (
+                                <li
+                                    key={name}
+                                    className="py-2 px-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => handleClickSessionName(name)}
+                                >
                                     {name}
-                                    <button onClick={() => handleRemoveLoadedSession(name)} className="remove-btn">❌</button>
                                 </li>
                             ))}
                         </ul>
-                    </Card>
-                )}
-
-                {/* Modal to pick a session to load */}
-                {showSessionListModal && (
-                    <div className="overlay">
-                        <div className="modal popup">
-                            <h3>Select Session to Load</h3>
-                            <ul className="session-list">
-                                {allSessionNames.map((name) => (
-                                    <li key={name} className="session-list-item" onClick={() => handleClickSessionName(name)}>
-                                        {name}
-                                    </li>
-                                ))}
-                            </ul>
-                            <button onClick={() => setShowSessionListModal(false)} className="close-btn">Close</button>
-                        </div>
+                        <button
+                            onClick={() => setShowSessionListModal(false)}
+                            className="mt-4 btn btn-outline w-full"
+                        >
+                            Close
+                        </button>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
