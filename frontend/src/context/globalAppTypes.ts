@@ -50,6 +50,14 @@ export interface FrequencyLayerVisibility {
     visible_location_estimate: boolean;
 }
 
+export interface FrequencyLayerVisibility1 {
+    frequency: number;
+    visible_pings: boolean;
+    visible_location_estimate: boolean;
+    sessionName: string;
+  }
+  
+
 export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineState {
     // Simulator
     initSimulator: (config: RadioConfig) => Promise<boolean>;
@@ -71,8 +79,8 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     deleteAllFrequencyLayers: () => void;
     frequencyVisibility: FrequencyLayerVisibility[];
     setFrequencyVisibility: (visibility: FrequencyLayerVisibility[]) => void;
-    frequencyVisibility1: FrequencyLayerVisibility[]; //tracking session loaded data visibility
-    setFrequencyVisibility1: (visibility: FrequencyLayerVisibility[]) => void; //tracking session loaded data visibility
+    frequencyVisibility1: FrequencyLayerVisibility1[]; //tracking session loaded data visibility
+    setFrequencyVisibility1: (visibility: FrequencyLayerVisibility1[]) => void; //tracking session loaded data visibility
     mapRef: RefObject<Map | null>;
     loadPOIs: () => Promise<void>;
     addPOI: (name: string, coords: [number, number]) => Promise<boolean>;

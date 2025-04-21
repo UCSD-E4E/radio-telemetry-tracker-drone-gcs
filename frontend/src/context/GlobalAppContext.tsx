@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GlobalAppState, PingFinderConfigState, RadioConfigState, FrequencyLayerVisibility } from './globalAppTypes';
+import { GlobalAppState, PingFinderConfigState, RadioConfigState, FrequencyLayerVisibility, FrequencyLayerVisibility1  } from './globalAppTypes';
 import { GpsData, PingFinderConfig, POI, RadioConfig, PingData, LocEstData} from '../types/global';
 import { MAP_SOURCES, MapSource } from '../utils/mapSources';
 import { useInternetStatus } from '../hooks/useInternetStatus';
@@ -40,7 +40,7 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
     //Save/Load Tracking Session Data On Map 
     const [frequencyData1, setFrequencyData1] = useState<FrequencyData>({});
-    const [frequencyVisibility1, setFrequencyVisibility1] = useState<FrequencyLayerVisibility[]>([]);
+    const [frequencyVisibility1, setFrequencyVisibility1] = useState<FrequencyLayerVisibility1[]>([]);
     const [loadedSessionNames, setLoadedSessionNames] = useState<string[]>([]);
 
 
@@ -233,7 +233,8 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
                    .map(freq => ({
                        frequency: freq,
                        visible_pings: true,
-                       visible_location_estimate: true
+                       visible_location_estimate: true, 
+                       sessionName: sessionName
                    }));
                return [...prev, ...newFreqs];
            });
@@ -275,24 +276,19 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         };
 
         const removeTrackingSessionFromMap = useCallback((sessionName: string) => {
-            setFrequencyVisibility1(prev => {
-                // Find all frequencies that were part of this session
-                const frequenciesInSession = Object.values(frequencyData1)
-                    .filter(data => data.sessionName === sessionName)
-                    .map(data => data.frequency);
-        
-                return prev.map(item => {
-                    if (frequenciesInSession.includes(item.frequency)) {
-                        return {
-                            ...item,
-                            visible_pings: false,
-                            visible_location_estimate: false
-                        };
-                    }
-                    return item;
-                });
-            });
-        }, [frequencyData1]);
+            setFrequencyVisibility1(prev =>
+              prev.map(item => {
+                if (item.sessionName === sessionName) {
+                  return {
+                    ...item,
+                    visible_pings: false,
+                    visible_location_estimate: false
+                  };
+                }
+                return item;
+              })
+            );
+          }, []);           
         
 
 
