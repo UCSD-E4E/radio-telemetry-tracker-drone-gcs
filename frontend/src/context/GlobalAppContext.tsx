@@ -274,6 +274,27 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
             return result;
         };
 
+        const removeTrackingSessionFromMap = useCallback((sessionName: string) => {
+            setFrequencyVisibility1(prev => {
+                // Find all frequencies that were part of this session
+                const frequenciesInSession = Object.values(frequencyData1)
+                    .filter(data => data.sessionName === sessionName)
+                    .map(data => data.frequency);
+        
+                return prev.map(item => {
+                    if (frequenciesInSession.includes(item.frequency)) {
+                        return {
+                            ...item,
+                            visible_pings: false,
+                            visible_location_estimate: false
+                        };
+                    }
+                    return item;
+                });
+            });
+        }, [frequencyData1]);
+        
+
 
         const save_frequencies_to_session = useCallback(async (sessionName: string, sessionDate: string, frequencies: TrackingSession) => {
             if (!window.backend) return -1;
@@ -528,6 +549,7 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         get_all_tracking_session_names, 
         loadedSessionNames, 
         setLoadedSessionNames, 
+        removeTrackingSessionFromMap, 
 
         // GPS Data
         gpsData,

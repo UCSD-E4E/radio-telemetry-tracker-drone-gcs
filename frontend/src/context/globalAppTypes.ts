@@ -85,6 +85,7 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     get_all_tracking_session_names: () => Promise<string[]> ; 
     loadedSessionNames: string[]; 
     setLoadedSessionNames: (sessionName: string[]) => void;
+    removeTrackingSessionFromMap: (sessionName: string) => void; 
 
 
     // GPS data

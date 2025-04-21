@@ -9,6 +9,8 @@ const TrackingSessionComponent: React.FC = () => {
     const save_frequencies_to_session = context?.save_frequencies_to_session ?? (() => Promise.resolve(-1));
     const get_all_tracking_session_names = context?.get_all_tracking_session_names ?? (() => Promise.resolve([]));
     const get_frequencies_by_session = context?.get_frequencies_by_session ?? (() => Promise.resolve([]));
+    const removeTrackingSessionFromMap = context?.removeTrackingSessionFromMap;
+    
     const frequencyData = context?.frequencyData ?? {};
 
     const [sessionName, setSessionName] = useState("");
@@ -85,6 +87,7 @@ const TrackingSessionComponent: React.FC = () => {
 
     const handleRemoveLoadedSession = (name: string) => {
         setLoadedSessionNames(prev => prev.filter(n => n !== name));
+        removeTrackingSessionFromMap?.(name);
     };
 
     return (
