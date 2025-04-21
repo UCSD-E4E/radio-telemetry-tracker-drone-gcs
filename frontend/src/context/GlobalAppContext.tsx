@@ -226,18 +226,31 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
            const frequencyDataNewCorrectFormat = convertTrackingSessionToFrequencyData(frequencyDataNew); 
            setFrequencyData1(frequencyDataNewCorrectFormat);
            setFrequencyVisibility1(prev => {
-               const existingFreqs = new Set(prev.map(item => item.frequency));
-               const newFreqs = Object.entries(frequencyDataNewCorrectFormat)
-                   .map(([freq]) => parseInt(freq))
-                   .filter(freq => !existingFreqs.has(freq))
-                   .map(freq => ({
-                       frequency: freq,
-                       visible_pings: true,
-                       visible_location_estimate: true, 
-                       sessionName: sessionName
-                   }));
-               return [...prev, ...newFreqs];
-           });
+                const updated = prev.map(item => {
+                    if (item.sessionName === sessionName) {
+                        return {
+                            ...item,
+                            visible_pings: true,
+                            visible_location_estimate: true
+                        };
+                    }
+                    return item;
+                });
+            
+                const existingFreqs = new Set(prev.map(item => item.frequency));
+                const newFreqs = Object.entries(frequencyDataNewCorrectFormat)
+                    .map(([freq]) => parseInt(freq))
+                    .filter(freq => !existingFreqs.has(freq))
+                    .map(freq => ({
+                        frequency: freq,
+                        visible_pings: true,
+                        visible_location_estimate: true,
+                        sessionName: sessionName
+                    }));
+            
+                return [...updated, ...newFreqs];
+            });
+        
            return frequencyDataNew; 
         } catch (err) {
             console.error('Error fetching frequencies for session:', err);
