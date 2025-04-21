@@ -37,6 +37,11 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     const [frequencyVisibility, setFrequencyVisibility] = useState<FrequencyLayerVisibility[]>([]);
     const mapRef = useRef<LeafletMap | null>(null);
 
+
+    //Save/Load Tracking Session Data On Map 
+    const [frequencyData1, setFrequencyData1] = useState<FrequencyData>({});
+    const [frequencyVisibility1, setFrequencyVisibility1] = useState<FrequencyLayerVisibility[]>([]);
+
     // GPS Data
     const [gpsData, setGpsData] = useState<GpsData | null>(null);
     const [gpsDataUpdated, setGpsDataUpdated] = useState<boolean>(false);
@@ -208,16 +213,69 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
            throw err; 
         }
     }, []);
+
+
+        const convertTrackingSessionToFrequencyData = (session: TrackingSession): FrequencyData => {
+            const result: Record<string, { frequency: number; pings: PingData[], locationEstimate: LocEstData | null}> = {};
     
+            for (const record of session) {
+                const freq = record.frequency.toString();
+        
+                if (!result[freq]) {
+                    result[freq] = {
+                        frequency: record.frequency,
+                        pings: [],
+                        locationEstimate: null,
+                    };
+                }
+        
+                if (record.data_type === "ping") {
+                    result[freq].pings.push({
+                        lat: record.latitude,
+                        long: record.longitude,
+                        amplitude: record.amplitude ?? 0,
+                        timestamp: record.timestamp,
+                        frequency: record.frequency,
+                        packet_id: record.packet_idts// or a number type depending on your definition
+                    });
+                }
+            }
+        
+            return result;
+        };
+
+
     const save_frequencies_to_session = useCallback(async (sessionName: string, sessionDate: string, frequencies: TrackingSession) => {
         if (!window.backend) return -1;
+    
         try {
-            return await window.backend.save_frequencies_to_session(sessionName, sessionDate, frequencies);
+            const result = await window.backend.save_frequencies_to_session(sessionName, sessionDate, frequencies);
+            const converted = convertTrackingSessionToFrequencyData(frequencies);
+            setFrequencyData1(prev => ({
+                ...prev,
+                ...converted, 
+            }));
+    
+            setFrequencyVisibility1(prev => {
+                const existingFreqs = new Set(prev.map(item => item.frequency));
+                const newFreqs = Object.entries(frequencies)
+                    .map(([freq]) => parseInt(freq))
+                    .filter(freq => !existingFreqs.has(freq))
+                    .map(freq => ({
+                        frequency: freq,
+                        visible_pings: true,
+                        visible_location_estimate: true
+                    }));
+                return [...prev, ...newFreqs];
+            });
+    
+            return result;
         } catch (err) {
             console.error('Error saving tracking session:', err);
             return -1;
         }
     }, []);
+    
 
 
     const clearTileCache = useCallback(async () => {
