@@ -556,6 +556,11 @@ class CommunicationBridge(QObject):
         """Save frequencies and return the session ID."""
         frequency_list = frequencies # Convert QVariant to Python list
         return self._frequency_service.save_frequencies_to_session(session_name, session_date, frequency_list)
+    
+    @pyqtSlot(result=QVariant)
+    def get_all_session_names(self) -> QVariant:
+        """Expose all tracking session names to the frontend."""
+        return QVariant(self._frequency_service.get_all_session_names()) 
 
     # --------------------------------------------------------------------------
     # LAYERS

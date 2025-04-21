@@ -41,6 +41,8 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     //Save/Load Tracking Session Data On Map 
     const [frequencyData1, setFrequencyData1] = useState<FrequencyData>({});
     const [frequencyVisibility1, setFrequencyVisibility1] = useState<FrequencyLayerVisibility[]>([]);
+    const [loadedSessionNames, setLoadedSessionNames] = useState<string[]>([]);
+
 
     // GPS Data
     const [gpsData, setGpsData] = useState<GpsData | null>(null);
@@ -204,6 +206,19 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }, []);
 
     //Tracking Session 
+    const get_all_tracking_session_names = useCallback(async (): Promise<string[]> => {
+        if (!window.backend) throw new Error("Backend not available");
+    
+        try {
+            const sessionNames = await window.backend.get_all_session_names();
+            return sessionNames;
+        } catch (err) {
+            console.error('Error fetching all tracking session names:', err);
+            return [];
+        }
+    }, []);
+
+    
     const get_frequencies_by_session = useCallback(async (sessionName: string) => {
         if (!window.backend) throw new Error("Backend not available");
         try {
@@ -270,6 +285,7 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
                 return -1; // Return -1 in case of an error
             }
         }, []);
+        
         
     
 
@@ -509,6 +525,9 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         //TrackingSession
         get_frequencies_by_session, 
         save_frequencies_to_session,
+        get_all_tracking_session_names, 
+        loadedSessionNames, 
+        setLoadedSessionNames, 
 
         // GPS Data
         gpsData,

@@ -7,6 +7,7 @@ from radio_telemetry_tracker_drone_gcs.services.frequency_db import (
     get_session_id_by_name, 
     get_frequencies_by_session, 
     save_frequencies_to_session,
+    get_all_session_names
 )
 
 
@@ -90,4 +91,9 @@ class FrequencyService:
         except Exception:
             logging.exception("Error retrieving frequencies for session")
             return []
-
+    def get_all_session_names(self, _: any = None) -> list[str]:
+        try: 
+            return get_all_session_names()
+        except Exception: 
+            logging.exception("Error retrieving session names")
+            return []

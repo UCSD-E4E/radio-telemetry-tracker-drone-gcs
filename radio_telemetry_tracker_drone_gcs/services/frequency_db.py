@@ -172,3 +172,16 @@ def get_frequencies_by_session(session_name: str) -> List[Dict]:
     except sqlite3.Error:
         logging.exception("Error retrieving frequency data for session")
         return []  # Return empty list if an error occurs
+    
+def get_all_session_names() -> List[str]:
+    """Retrieve all session names from the tracking_sessions table."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.execute("""
+                SELECT name FROM tracking_sessions ORDER BY date DESC
+            """)
+            rows = cursor.fetchall()
+            return [row[0] for row in rows]
+    except sqlite3.Error:
+        logging.exception("Error retrieving session names")
+        return []

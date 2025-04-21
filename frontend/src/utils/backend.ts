@@ -89,6 +89,7 @@ export interface DroneBackend {
     //Tracking Session 
     get_frequencies_by_session(sessionName: string): Promise<TrackingSession>;
     save_frequencies_to_session(sessionName: string, sessionDate: string, frequencies: TrackingSession): Promise<number>;
+    get_all_session_names: () => Promise<string[]> ; 
 
     // Config and Control
     send_config_request(config: PingFinderConfig): Promise<boolean>;

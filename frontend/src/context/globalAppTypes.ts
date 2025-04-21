@@ -82,6 +82,10 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     //Tracking Session 
     get_frequencies_by_session: (sessionName: string) => Promise<TrackingSession>;
     save_frequencies_to_session: (sessionName: string, sessionDate: string, frequencies: TrackingSession) => Promise<number>;
+    get_all_tracking_session_names: () => Promise<string[]> ; 
+    loadedSessionNames: string[]; 
+    setLoadedSessionNames: (sessionName: string[]) => void;
+
 
     // GPS data
     gpsData: GpsData | null;
