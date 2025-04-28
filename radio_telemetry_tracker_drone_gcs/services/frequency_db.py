@@ -1,7 +1,9 @@
+"""Database utilities for managing tracking sessions and frequency data."""
+
 import logging
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator, List, Dict
 
 from radio_telemetry_tracker_drone_gcs.utils.paths import get_db_path
 
@@ -51,7 +53,7 @@ def init_db() -> None:
                     id INTEGER PRIMARY KEY,
                     session_id INTEGER,
                     frequency INTEGER NOT NULL,
-                    data_type TEXT NOT NULL,  -- 'ping' or 'location_estimate'
+                    data_type TEXT NOT NULL,
                     latitude REAL NOT NULL,
                     longitude REAL NOT NULL,
                     amplitude REAL,
@@ -74,12 +76,20 @@ def add_tracking_session(name: str, date: str) -> int:
                 VALUES (?, ?)
             """, (name, date))
             conn.commit()
-            return cursor.lastrowid  # Return the ID of the newly created session
+            return cursor.lastrowid
     except sqlite3.Error:
         logging.exception("Error adding tracking session")
         return -1
 
-def add_frequency(frequency: int, data_type: str, latitude: float, longitude: float, amplitude: float, session_id: int, timestamp: int) -> bool:
+def add_frequency(# noqa: PLR0913
+    frequency: int,
+    data_type: str,
+    latitude: float,
+    longitude: float,
+    amplitude: float,
+    session_id: int,
+    timestamp: int,
+) -> bool:
     """Add a frequency record to the database associated with the given session ID."""
     try:
         with get_db_connection() as conn:
@@ -94,35 +104,26 @@ def add_frequency(frequency: int, data_type: str, latitude: float, longitude: fl
         return False
 
 def save_frequencies_to_session(session_name: str, session_date: str, frequencies: list[dict]) -> int:
-    """
-    Create a new tracking session and save the frequencies associated with it.
-
-    :param session_name: The name of the new tracking session
-    :param session_date: The date of the new tracking session
-    :param frequencies: List of frequency data (dict with frequency details)
-    :return: The ID of the created tracking session or -1 if an error occurred
-    """
-    # 1. Create the tracking session
+    """Create a new tracking session and save the frequencies associated with it."""
     session_id = add_tracking_session(session_name, session_date)
     if session_id == -1:
         return -1
 
-    # 2. Save the frequencies to the newly created session
     for freq in frequencies:
         success = add_frequency(
-            frequency=freq['frequency'],
-            data_type=freq['data_type'],
-            latitude=freq['latitude'],
-            longitude=freq['longitude'],
-            amplitude=freq['amplitude'],
+            frequency=freq["frequency"],
+            data_type=freq["data_type"],
+            latitude=freq["latitude"],
+            longitude=freq["longitude"],
+            amplitude=freq["amplitude"],
             session_id=session_id,
-            timestamp=freq['timestamp']
+            timestamp=freq["timestamp"],
         )
         if not success:
-            logging.error(f"Failed to add frequency data for session {session_name}")
-            return -1  # Return failure if any frequency fails to save
+            logging.error("Failed to add frequency data for session %s", session_name)
+            return -1
 
-    return session_id  # Return the session ID if all frequencies were successfully saved
+    return session_id
 
 def get_session_id_by_name(session_name: str) -> int:
     """Retrieve the session ID based on the tracking session name."""
@@ -133,47 +134,43 @@ def get_session_id_by_name(session_name: str) -> int:
             """, (session_name,))
             row = cursor.fetchone()
             if row:
-                return row[0]  # Return the session ID
-            else:
-                logging.error(f"Session with name '{session_name}' not found.")
-                return -1  # Return -1 if no session is found
+                return row[0]
+            logging.error("Session with name '%s' not found.", session_name)
+            return -1
     except sqlite3.Error:
         logging.exception("Error retrieving session ID by name")
         return -1
 
-def get_frequencies_by_session(session_name: str) -> List[Dict]:
+def get_frequencies_by_session(session_name: str) -> list[dict]:
     """Retrieve all frequency data associated with a specific tracking session."""
     session_id = get_session_id_by_name(session_name)
     if session_id == -1:
-        return []  # Return empty list if the session doesn't exist
+        return []
 
     try:
         with get_db_connection() as conn:
             cursor = conn.execute("""
-                SELECT frequency, data_type, latitude, longitude, amplitude, timestamp 
+                SELECT frequency, data_type, latitude, longitude, amplitude, timestamp
                 FROM frequency_data WHERE session_id = ?
             """, (session_id,))
             frequencies = cursor.fetchall()
-            
-            # Convert result to a list of dictionaries
-            frequency_data = [
+
+            return [
                 {
                     "frequency": freq[0],
                     "data_type": freq[1],
                     "latitude": freq[2],
                     "longitude": freq[3],
                     "amplitude": freq[4],
-                    "timestamp": freq[5]
+                    "timestamp": freq[5],
                 }
                 for freq in frequencies
             ]
-            
-            return frequency_data
     except sqlite3.Error:
         logging.exception("Error retrieving frequency data for session")
-        return []  # Return empty list if an error occurs
-    
-def get_all_session_names() -> List[str]:
+        return []
+
+def get_all_session_names() -> list[str]:
     """Retrieve all session names from the tracking_sessions table."""
     try:
         with get_db_connection() as conn:

@@ -1,13 +1,16 @@
+"""Service layer for frequency and tracking session operations."""
+
 import logging
 from typing import Any
+
 from radio_telemetry_tracker_drone_gcs.services.frequency_db import (
-    init_db,
-    add_tracking_session,
     add_frequency,
-    get_session_id_by_name, 
-    get_frequencies_by_session, 
+    add_tracking_session,
+    get_all_session_names,
+    get_frequencies_by_session,
+    get_session_id_by_name,
+    init_db,
     save_frequencies_to_session,
-    get_all_session_names
 )
 
 
@@ -19,39 +22,27 @@ class FrequencyService:
         init_db()
 
     def add_tracking_session(self, name: str, date: str) -> int:
-        """Add a new tracking session to the database.
-
-        Args:
-            name: Name of the tracking session
-            date: Date of the tracking session
-
-        Returns:
-            int: The ID of the newly created tracking session
-        """
+        """Add a new tracking session to the database."""
         try:
             return add_tracking_session(name, date)
         except Exception:
             logging.exception("Error adding tracking session")
             return -1
 
-    def add_frequency(self, frequency: int, data_type: str, latitude: float, longitude: float, amplitude: float, session_name: str, timestamp: int) -> bool:
-        """Add a frequency record to a specific tracking session.
-
-        Args:
-            frequency: Frequency value (Hz)
-            data_type: Type of the frequency data ('ping' or 'location_estimate')
-            latitude: Latitude of the frequency record
-            longitude: Longitude of the frequency record
-            amplitude: Amplitude of the frequency
-            session_name: Name of the tracking session
-            timestamp: Timestamp for the frequency record
-
-        Returns:
-            bool: True if the frequency was added successfully, False otherwise
-        """
+    def add_frequency(# noqa: PLR0913
+        self,
+        frequency: int,
+        data_type: str,
+        latitude: float,
+        longitude: float,
+        amplitude: float,
+        session_name: str,
+        timestamp: int,
+    ) -> bool:
+        """Add a frequency record to a specific tracking session."""
         session_id = get_session_id_by_name(session_name)
         if session_id == -1:
-            logging.error(f"Session '{session_name}' not found.")
+            logging.error("Session '%s' not found.", session_name)
             return False
 
         try:
@@ -61,16 +52,7 @@ class FrequencyService:
             return False
 
     def save_frequencies_to_session(self, session_name: str, session_date: str, frequencies: list[dict]) -> int:
-        """Create a new tracking session and save the frequencies associated with it.
-
-        Args:
-            session_name: Name of the tracking session
-            session_date: Date of the tracking session
-            frequencies: List of frequency data (dict with frequency details)
-
-        Returns:
-            int: The ID of the created tracking session or -1 if an error occurred
-        """
+        """Create a new tracking session and save the frequencies associated with it."""
         try:
             return save_frequencies_to_session(session_name, session_date, frequencies)
         except Exception:
@@ -78,22 +60,17 @@ class FrequencyService:
             return -1
 
     def get_frequencies_by_session(self, session_name: str) -> list[dict[str, Any]]:
-        """Retrieve all frequency records for a specific tracking session.
-
-        Args:
-            session_name: Name of the tracking session
-
-        Returns:
-            list[dict]: List of frequency data for the session
-        """
+        """Retrieve all frequency records for a specific tracking session."""
         try:
             return get_frequencies_by_session(session_name)
         except Exception:
             logging.exception("Error retrieving frequencies for session")
             return []
-    def get_all_session_names(self, _: any = None) -> list[str]:
-        try: 
+
+    def get_all_session_names(self, _: object = None) -> list[str]:
+        """Retrieve all tracking session names."""
+        try:
             return get_all_session_names()
-        except Exception: 
+        except Exception:
             logging.exception("Error retrieving session names")
             return []
