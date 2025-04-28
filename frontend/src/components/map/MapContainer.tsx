@@ -7,6 +7,11 @@ import NavigationControls from './NavigationControls';
 import DataLayers from './DataLayers';
 import { GlobalAppContext } from '../../context/globalAppContextDef';
 import { logToPython } from '../../utils/logging';
+import MapOverlayControls from './MapOverlayControls';
+import MapDrawingControls from './MapDrawingControls';
+import MapDrawingLayer from './MapDrawingLayer';
+import { MapShapesProvider } from '../../context/MapShapesContext';
+
 
 const DEFAULT_CENTER: [number, number] = [32.8801, -117.2340];
 const DEFAULT_ZOOM = 13;
@@ -142,35 +147,40 @@ const MapContainer: React.FC = () => {
     };
 
     return (
-        <div className="h-full w-full relative">
-            <LeafletMap
-                center={DEFAULT_CENTER}
-                zoom={DEFAULT_ZOOM}
-                className="h-full w-full relative z-[1000]"
-                zoomControl={false}
-                attributionControl={false}
-                ref={onMapCreated}
-            >
-                <CustomTileLayer
-                    source={currentMapSource.id}
-                    isOffline={isMapOffline}
-                    attribution={currentMapSource.attribution}
-                    maxZoom={currentMapSource.maxZoom}
-                    minZoom={currentMapSource.minZoom}
-                    onOfflineMiss={() =>
-                        setTileError('Some tiles are not available offline. Please cache them in online mode first.')
-                    }
-                />
-                <FixMapSize />
-                <NavigationControls />
-                <DataLayers />
-            </LeafletMap>
-            {tileError && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-[1001]">
-                    {tileError}
-                </div>
-            )}
-        </div>
+        <MapShapesProvider>
+            <div className="h-full w-full relative">
+                <LeafletMap
+                    center={DEFAULT_CENTER}
+                    zoom={DEFAULT_ZOOM}
+                    className="h-full w-full relative z-[1000]"
+                    zoomControl={false}
+                    attributionControl={false}
+                    ref={onMapCreated}
+                >
+                    <CustomTileLayer
+                        source={currentMapSource.id}
+                        isOffline={isMapOffline}
+                        attribution={currentMapSource.attribution}
+                        maxZoom={currentMapSource.maxZoom}
+                        minZoom={currentMapSource.minZoom}
+                        onOfflineMiss={() =>
+                            setTileError('Some tiles are not available offline. Please cache them in online mode first.')
+                        }
+                    />
+                    <FixMapSize />
+                    <NavigationControls />
+                    <DataLayers />
+                    <MapDrawingLayer />
+                </LeafletMap>
+                {tileError && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-[1001]">
+                        {tileError}
+                    </div>
+                )}
+                <MapOverlayControls />
+                <MapDrawingControls />
+            </div>
+        </MapShapesProvider>
     );
 };
 
