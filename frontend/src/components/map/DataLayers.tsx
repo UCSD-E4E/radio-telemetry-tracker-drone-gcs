@@ -364,7 +364,7 @@ const DataLayers: React.FC = () => {
             <DroneMarker gpsData={gpsData} isConnected={connectionStatus === 1} />
 
             {/* Actual layers rendering */}
-            {frequencyVisibility1.map(({ frequency, visible_pings }) => (
+            {(frequencyVisibility1 ?? []).map(({ frequency, visible_pings }) => (
                 <FrequencyLayer
                     key={frequency}
                     frequency={frequency}
