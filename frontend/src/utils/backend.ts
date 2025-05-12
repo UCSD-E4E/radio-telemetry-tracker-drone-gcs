@@ -21,6 +21,18 @@ export interface FrequencyData {
     }
 }
 
+export interface FrequencyRecord {
+    frequency: number;
+    data_type: "ping" | "location_estimate";
+    latitude: number;
+    longitude: number;
+    amplitude: number | null;
+    timestamp: number;
+    packet_idts: number; 
+}
+
+export type TrackingSession = FrequencyRecord[];
+
 export interface DroneBackend {
     // Connection
     get_serial_ports(): Promise<string[]>;
@@ -72,7 +84,12 @@ export interface DroneBackend {
     add_poi(name: string, coords: [number, number]): Promise<boolean>;
     remove_poi(name: string): Promise<boolean>;
     rename_poi(oldName: string, newName: string): Promise<boolean>;
-    pois_updated: Signal<POI[]>;
+    pois_updated: Signal<POI[]>; 
+
+    //Tracking Session 
+    get_frequencies_by_session(sessionName: string): Promise<TrackingSession>;
+    save_frequencies_to_session(sessionName: string, sessionDate: string, frequencies: TrackingSession): Promise<number>;
+    get_all_session_names: () => Promise<string[]> ; 
 
     // Config and Control
     send_config_request(config: PingFinderConfig): Promise<boolean>;

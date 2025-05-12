@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GlobalAppState, PingFinderConfigState, RadioConfigState, FrequencyLayerVisibility } from './globalAppTypes';
-import { GpsData, PingFinderConfig, POI, RadioConfig } from '../types/global';
+import { GlobalAppState, PingFinderConfigState, RadioConfigState, FrequencyLayerVisibility, FrequencyLayerVisibility1  } from './globalAppTypes';
+import { GpsData, PingFinderConfig, POI, RadioConfig, PingData, LocEstData} from '../types/global';
 import { MAP_SOURCES, MapSource } from '../utils/mapSources';
 import { useInternetStatus } from '../hooks/useInternetStatus';
 import { useConnectionQuality } from '../hooks/useConnectionQuality';
@@ -10,9 +10,9 @@ import { OFFLINE_MODE_KEY } from '../utils/mapSources';
 import { TileInfo } from '../types/global';
 import { GlobalAppContext } from './globalAppContextDef';
 import type { Map as LeafletMap } from 'leaflet';
-import { fetchBackend, FrequencyData } from '../utils/backend';
+import { fetchBackend, FrequencyData, TrackingSession } from '../utils/backend';
 import { logToPython } from '../utils/logging';
-import { GCSState } from './globalAppTypes';
+import { GCSState } from './globalAppTypes'; 
 
 const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Internet & Map Status
@@ -36,6 +36,13 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     const [frequencyData, setFrequencyData] = useState<FrequencyData>({});
     const [frequencyVisibility, setFrequencyVisibility] = useState<FrequencyLayerVisibility[]>([]);
     const mapRef = useRef<LeafletMap | null>(null);
+
+
+    //Save/Load Tracking Session Data On Map 
+    const [frequencyData1, setFrequencyData1] = useState<FrequencyData>({});
+    const [frequencyVisibility1, setFrequencyVisibility1] = useState<FrequencyLayerVisibility1[]>([]);
+    const [loadedSessionNames, setLoadedSessionNames] = useState<string[]>([]);
+
 
     // GPS Data
     const [gpsData, setGpsData] = useState<GpsData | null>(null);
@@ -197,6 +204,121 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
             return false;
         }
     }, []);
+
+    //Tracking Session 
+    const get_all_tracking_session_names = useCallback(async (): Promise<string[]> => {
+        if (!window.backend) throw new Error("Backend not available");
+    
+        try {
+            const sessionNames = await window.backend.get_all_session_names();
+            return sessionNames;
+        } catch (err) {
+            console.error('Error fetching all tracking session names:', err);
+            return [];
+        }
+    }, []);
+
+    
+    const get_frequencies_by_session = useCallback(async (sessionName: string) => {
+        if (!window.backend) throw new Error("Backend not available");
+        try {
+           const frequencyDataNew = await window.backend.get_frequencies_by_session(sessionName);
+           const frequencyDataNewCorrectFormat = convertTrackingSessionToFrequencyData(frequencyDataNew); 
+           setFrequencyData1(frequencyDataNewCorrectFormat);
+           setFrequencyVisibility1(prev => {
+                const updated = prev.map(item => {
+                    if (item.sessionName === sessionName) {
+                        return {
+                            ...item,
+                            visible_pings: true,
+                            visible_location_estimate: true
+                        };
+                    }
+                    return item;
+                });
+            
+                const existingFreqs = new Set(prev.map(item => item.frequency));
+                const newFreqs = Object.entries(frequencyDataNewCorrectFormat)
+                    .map(([freq]) => parseInt(freq))
+                    .filter(freq => !existingFreqs.has(freq))
+                    .map(freq => ({
+                        frequency: freq,
+                        visible_pings: true,
+                        visible_location_estimate: true,
+                        sessionName: sessionName
+                    }));
+            
+                return [...updated, ...newFreqs];
+            });
+        
+           return frequencyDataNew; 
+        } catch (err) {
+            console.error('Error fetching frequencies for session:', err);
+           throw err; 
+        }
+    }, []);
+
+
+        const convertTrackingSessionToFrequencyData = (session: TrackingSession): FrequencyData => {
+            const result: Record<string, { frequency: number; pings: PingData[], locationEstimate: LocEstData | null}> = {};
+    
+            for (const record of session) {
+                const freq = record.frequency.toString();
+        
+                if (!result[freq]) {
+                    result[freq] = {
+                        frequency: record.frequency,
+                        pings: [],
+                        locationEstimate: null,
+                    };
+                }
+        
+                if (record.data_type === "ping") {
+                    result[freq].pings.push({
+                        lat: record.latitude,
+                        long: record.longitude,
+                        amplitude: record.amplitude ?? 0,
+                        timestamp: record.timestamp,
+                        frequency: record.frequency,
+                        packet_id: record.packet_idts 
+                    });
+                }
+            }
+        
+            return result;
+        };
+
+        const removeTrackingSessionFromMap = useCallback((sessionName: string) => {
+            setFrequencyVisibility1(prev =>
+              prev.map(item => {
+                if (item.sessionName === sessionName) {
+                  return {
+                    ...item,
+                    visible_pings: false,
+                    visible_location_estimate: false
+                  };
+                }
+                return item;
+              })
+            );
+          }, []);           
+        
+
+
+        const save_frequencies_to_session = useCallback(async (sessionName: string, sessionDate: string, frequencies: TrackingSession) => {
+            if (!window.backend) return -1;
+            try {
+                const result = await window.backend.save_frequencies_to_session(sessionName, sessionDate, frequencies);
+                return result; // Return the result from the backend
+            } catch (err) {
+                console.error('Error saving tracking session:', err);
+                return -1; // Return -1 in case of an error
+            }
+        }, []);
+        
+        
+    
+
 
     const clearTileCache = useCallback(async () => {
         if (!window.backend) return false;
@@ -417,15 +539,26 @@ const GlobalAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         tileInfo,
         pois,
         frequencyData,
+        frequencyData1,
         deleteFrequencyLayer,
         deleteAllFrequencyLayers,
         frequencyVisibility,
+        frequencyVisibility1,
         setFrequencyVisibility,
+        setFrequencyVisibility1,
         mapRef,
         loadPOIs,
         addPOI,
         removePOI,
         clearTileCache,
+
+        //TrackingSession
+        get_frequencies_by_session, 
+        save_frequencies_to_session,
+        get_all_tracking_session_names, 
+        loadedSessionNames, 
+        setLoadedSessionNames, 
+        removeTrackingSessionFromMap, 
 
         // GPS Data
         gpsData,

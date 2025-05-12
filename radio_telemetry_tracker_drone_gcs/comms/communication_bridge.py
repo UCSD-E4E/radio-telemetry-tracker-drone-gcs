@@ -37,6 +37,7 @@ from radio_telemetry_tracker_drone_gcs.data.models import (
 from radio_telemetry_tracker_drone_gcs.data.models import (
     PingData as InternalPingData,
 )
+from radio_telemetry_tracker_drone_gcs.services.frequency_service import FrequencyService
 from radio_telemetry_tracker_drone_gcs.services.poi_service import PoiService
 from radio_telemetry_tracker_drone_gcs.services.simulator_service import SimulatorService
 from radio_telemetry_tracker_drone_gcs.services.tile_service import TileService
@@ -86,6 +87,7 @@ class CommunicationBridge(QObject):
     simulator_started = pyqtSignal()
     simulator_stopped = pyqtSignal()
 
+
     def __init__(self) -> None:
         """Initialize the communication bridge with data manager and services."""
         super().__init__()
@@ -97,6 +99,9 @@ class CommunicationBridge(QObject):
         # Tile & POI
         self._tile_service = TileService()
         self._poi_service = PoiService()
+
+        #Tracking Sessions
+        self._frequency_service = FrequencyService()
 
         # State machine
         self._state_machine = DroneStateMachine()
@@ -535,6 +540,26 @@ class CommunicationBridge(QObject):
     def _emit_pois(self) -> None:
         pois = self._poi_service.get_pois()
         self.pois_updated.emit(QVariant(pois))
+
+    # --------------------------------------------------------------------------
+    # Frequency and Tracking Session Bridging
+    # --------------------------------------------------------------------------
+
+    @pyqtSlot(str, result=QVariant)
+    def get_frequencies_by_session(self, session_name: str) -> QVariant:
+        """Retrieve frequencies and return them to the frontend."""
+        return QVariant(self._frequency_service.get_frequencies_by_session(session_name))
+
+    @pyqtSlot(str, str, QVariant, result=int)
+    def save_frequencies_to_session(self, session_name: str, session_date: str, frequencies: QVariant) -> int:
+        """Save frequencies and return the session ID."""
+        frequency_list = frequencies # Convert QVariant to Python list
+        return self._frequency_service.save_frequencies_to_session(session_name, session_date, frequency_list)
+
+    @pyqtSlot(result=QVariant)
+    def get_all_session_names(self) -> QVariant:
+        """Expose all tracking session names to the frontend."""
+        return QVariant(self._frequency_service.get_all_session_names())
 
     # --------------------------------------------------------------------------
     # LAYERS

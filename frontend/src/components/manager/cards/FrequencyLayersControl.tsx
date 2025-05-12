@@ -4,7 +4,7 @@ import { MapPinIcon, SignalIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Card from '../../common/Card';
 
 const FrequencyLayersControl: React.FC = () => {
-    const context = useContext(GlobalAppContext);
+    const context = useContext(GlobalAppContext); 
     if (!context) throw new Error('FrequencyLayersControl must be in GlobalAppProvider');
 
     const { 

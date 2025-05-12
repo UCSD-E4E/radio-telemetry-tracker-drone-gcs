@@ -2,7 +2,7 @@ import type { Map } from 'leaflet';
 import type { RefObject } from 'react';
 import type { GpsData, POI, TileInfo, RadioConfig } from '../types/global';
 import type { MapSource } from '../utils/mapSources';
-import { FrequencyData } from '../utils/backend';
+import { FrequencyData, TrackingSession } from '../utils/backend';
 import type { ConnectionQualityState } from '../hooks/useConnectionQuality';
 import type { GCSStateMachineState } from '../hooks/useGCSStateMachine';
 
@@ -50,6 +50,14 @@ export interface FrequencyLayerVisibility {
     visible_location_estimate: boolean;
 }
 
+export interface FrequencyLayerVisibility1 {
+    frequency: number;
+    visible_pings: boolean;
+    visible_location_estimate: boolean;
+    sessionName: string;
+  }
+  
+
 export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineState {
     // Simulator
     initSimulator: (config: RadioConfig) => Promise<boolean>;
@@ -64,16 +72,29 @@ export interface GlobalAppState extends ConnectionQualityState, GCSStateMachineS
     mapSources: MapSource[];
     tileInfo: TileInfo | null;
     pois: POI[];
-    frequencyData: FrequencyData;
+    frequencyData: FrequencyData; 
+    frequencyData1: FrequencyData; //tracking session loaded data 
+
     deleteFrequencyLayer: (frequency: number) => void;
     deleteAllFrequencyLayers: () => void;
     frequencyVisibility: FrequencyLayerVisibility[];
     setFrequencyVisibility: (visibility: FrequencyLayerVisibility[]) => void;
+    frequencyVisibility1: FrequencyLayerVisibility1[]; //tracking session loaded data visibility
+    setFrequencyVisibility1: (visibility: FrequencyLayerVisibility1[]) => void; //tracking session loaded data visibility
     mapRef: RefObject<Map | null>;
     loadPOIs: () => Promise<void>;
     addPOI: (name: string, coords: [number, number]) => Promise<boolean>;
     removePOI: (name: string) => Promise<boolean>;
     clearTileCache: () => Promise<boolean>;
+
+    //Tracking Session 
+    get_frequencies_by_session: (sessionName: string) => Promise<TrackingSession>;
+    save_frequencies_to_session: (sessionName: string, sessionDate: string, frequencies: TrackingSession) => Promise<number>;
+    get_all_tracking_session_names: () => Promise<string[]> ; 
+    loadedSessionNames: string[]; 
+    setLoadedSessionNames: (sessionName: string[]) => void;
+    removeTrackingSessionFromMap: (sessionName: string) => void; 
+
 
     // GPS data
     gpsData: GpsData | null;
