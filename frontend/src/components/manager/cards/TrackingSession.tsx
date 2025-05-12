@@ -1,7 +1,10 @@
+/* global alert */
 import React, { useState, useContext } from "react";
 import { GlobalAppContext } from "../../../context/globalAppContextDef";
 import Card from "../../common/Card";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import type { FrequencyData, TrackingSession } from '../../../types/global';
+
 
 const TrackingSessionComponent: React.FC = () => {
     const context = useContext(GlobalAppContext);
@@ -21,9 +24,9 @@ const TrackingSessionComponent: React.FC = () => {
     const [showSessionListModal, setShowSessionListModal] = useState(false);
     const [loadedSessionNames, setLoadedSessionNames] = useState<string[]>([]);
 
-    const convertFrequencyDataToTrackingSession = (frequencyData: any) => {
-        return Object.entries(frequencyData).flatMap(([freq, data]: any) =>
-            data.pings.map((ping: any) => ({
+    const convertFrequencyDataToTrackingSession = (frequencyData: FrequencyData): TrackingSession => {
+        return Object.entries(frequencyData).flatMap(([freq, data]) =>
+            data.pings.map((ping) => ({
                 frequency: Number(freq),
                 data_type: "ping",
                 latitude: ping.lat,
