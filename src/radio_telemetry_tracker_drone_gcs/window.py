@@ -9,6 +9,8 @@ from PyQt6.QtWebEngineCore import QWebEngineScript
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QMainWindow
 
+logger = logging.getLogger(__name__)
+
 
 class MainWindow(QMainWindow):
     """Main application window that hosts the web-based frontend using QWebEngineView."""
@@ -52,22 +54,22 @@ class MainWindow(QMainWindow):
 
         dist_path = Path(__file__).parent / "frontend_dist" / "index.html"
         if not dist_path.exists():
-            logging.error("Frontend dist not found at %s", dist_path)
+            logger.error("Frontend dist not found at %s", dist_path)
             msg = f"Frontend dist not found at {dist_path}"
             raise FileNotFoundError(msg)
 
         local_url = QUrl.fromLocalFile(str(dist_path))
-        logging.info("Loading frontend from %s", local_url.toString())
+        logger.info("Loading frontend from %s", local_url.toString())
         self.web_view.setUrl(local_url)
 
     def _on_load_finished(self, *, ok: bool = True) -> None:
         if ok:
-            logging.info("Frontend loaded successfully")
+            logger.info("Frontend loaded successfully")
         else:
-            logging.error("Failed to load frontend")
+            logger.error("Failed to load frontend")
 
     def set_bridge(self, bridge: object) -> None:
         """Register the communication bridge object with the web channel."""
         self.bridge = bridge
         self.channel.registerObject("backend", bridge)
-        logging.info("Bridge registered with WebChannel")
+        logger.info("Bridge registered with WebChannel")

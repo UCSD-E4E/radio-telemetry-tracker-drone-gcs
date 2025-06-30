@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from radio_telemetry_tracker_drone_comms_package import (
     ConfigRequestData,
@@ -20,6 +20,9 @@ from radio_telemetry_tracker_drone_comms_package import (
     SyncRequestData,
     SyncResponseData,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class DroneCommsService:

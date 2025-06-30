@@ -15,6 +15,8 @@ from radio_telemetry_tracker_drone_gcs.services.tile_db import (
     store_tile_db,
 )
 
+logger = logging.getLogger(__name__)
+
 SATELLITE_ATTRIBUTION = (
     "© Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, "
     "Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
@@ -81,7 +83,7 @@ class TileService:
 
         # If offline mode, don't fetch from internet
         if offline:
-            logging.info("Offline mode, tile missing from DB => none returned")
+            logger.info("Offline mode, tile missing from DB => none returned")
             return None
 
         # Fetch from internet
@@ -93,16 +95,16 @@ class TileService:
     def _fetch_tile(self, z: int, x: int, y: int, source_id: str) -> bytes | None:
         ms = MAP_SOURCES.get(source_id)
         if not ms:
-            logging.error("Invalid source_id: %s", source_id)
+            logger.error("Invalid source_id: %s", source_id)
             return None
 
         url = ms["url_template"].format(z=z, x=x, y=y)
         try:
-            logging.info("Fetching tile from %s", url)
+            logger.info("Fetching tile from %s", url)
             resp = requests.get(url, headers=ms["headers"], timeout=3)
             if resp.status_code == HTTPStatus.OK:
                 return resp.content
-            logging.warning("Tile fetch returned status %d", resp.status_code)
+            logger.warning("Tile fetch returned status %d", resp.status_code)
         except requests.RequestException:
-            logging.info("Network error fetching tile - possibly offline.")
+            logger.info("Network error fetching tile - possibly offline.")
         return None
