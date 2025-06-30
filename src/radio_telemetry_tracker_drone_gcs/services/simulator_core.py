@@ -10,7 +10,7 @@ import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pyproj
@@ -33,7 +33,7 @@ from radio_telemetry_tracker_drone_comms_package import (
 from scipy.optimize import least_squares
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -678,7 +678,7 @@ class LocationEstimator:
 
             # Calculate distance between estimate and actual position
             distance = np.sqrt((res_x.x[0] - actual_x) ** 2 + (res_x.x[1] - actual_y) ** 2)
-            logging.info(
+            logger.info(
                 "Location estimate for %d Hz: (%.2f, %.2f), Distance from actual: %.2f m",
                 frequency,
                 res_x.x[0],
@@ -884,7 +884,7 @@ class SimulatedPingFinder:
         """Main simulation loop."""
         try:
             while self._running:
-                now = dt.datetime.now(dt.timezone.utc)
+                now = dt.datetime.now(dt.UTC)
                 pos = self._gps_generator.current_position
 
                 # Simulate pings for each transmitter

@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 import pyproj
+import serial.tools.list_ports
 from PyQt6.QtCore import QObject, QTimer, QVariant, pyqtSignal, pyqtSlot
 from radio_telemetry_tracker_drone_comms_package import (
     ConfigRequestData,
@@ -170,8 +171,6 @@ class CommunicationBridge(QObject):
     @pyqtSlot(result="QVariantList")
     def get_serial_ports(self) -> list[str]:
         """Return a list of available serial port device names."""
-        import serial.tools.list_ports
-
         port_info = list(serial.tools.list_ports.comports())
         return [str(p.device) for p in port_info]
 
@@ -227,7 +226,7 @@ class CommunicationBridge(QObject):
             tt = ack_s * max_r
             QTimer.singleShot(int(tt * 1000), self._sync_timeout_check)
         except Exception as e:
-            logging.exception("Error in initialize_comms")
+            logger.exception("Error in initialize_comms")
             self.sync_failure.emit(f"Initialize comms failed: {e!s}")
             return False
         else:
@@ -255,7 +254,7 @@ class CommunicationBridge(QObject):
             tt = self._comms_service.ack_timeout * self._comms_service.max_retries
             QTimer.singleShot(int(tt * 1000), self._disconnect_timeout_check)
         except Exception:
-            logging.exception("Stop request failed => forcing cleanup.")
+            logger.exception("Stop request failed => forcing cleanup.")
             self.disconnect_failure.emit("Stop request failed... forcing cleanup.")
             self._cleanup()
 
@@ -289,7 +288,7 @@ class CommunicationBridge(QObject):
             tt = self._comms_service.ack_timeout * self._comms_service.max_retries
             QTimer.singleShot(int(tt * 1000), self._config_timeout_check)
         except Exception as e:
-            logging.exception("Error in send_config_request")
+            logger.exception("Error in send_config_request")
             self.config_failure.emit(str(e))
             return False
         else:
@@ -322,7 +321,7 @@ class CommunicationBridge(QObject):
             tt = self._comms_service.ack_timeout * self._comms_service.max_retries
             QTimer.singleShot(int(tt * 1000), self._start_timeout_check)
         except Exception as e:
-            logging.exception("Error in send_start_request")
+            logger.exception("Error in send_start_request")
             self.start_failure.emit(str(e))
             return False
         else:
@@ -355,7 +354,7 @@ class CommunicationBridge(QObject):
             tt = self._comms_service.ack_timeout * self._comms_service.max_retries
             QTimer.singleShot(int(tt * 1000), self._stop_timeout_check)
         except Exception as e:
-            logging.exception("Error in send_stop_request")
+            logger.exception("Error in send_stop_request")
             self.stop_failure.emit(str(e))
             return False
         else:
@@ -440,7 +439,7 @@ class CommunicationBridge(QObject):
     # Error
     # --------------------------------------------------------------------------
     def _handle_error_packet(self, _: ErrorData) -> None:
-        logging.error("Received fatal error packet")
+        logger.error("Received fatal error packet")
         self.fatal_error.emit()
 
     # --------------------------------------------------------------------------
@@ -470,7 +469,7 @@ class CommunicationBridge(QObject):
             self.tile_info_updated.emit(QVariant(info))
             return base64.b64encode(tile_data).decode("utf-8")
         except Exception:
-            logging.exception("Error in get_tile()")
+            logger.exception("Error in get_tile()")
             return ""
 
     @pyqtSlot(result=QVariant)
@@ -480,7 +479,7 @@ class CommunicationBridge(QObject):
             info = self._tile_service.get_tile_info()
             return QVariant(info)
         except Exception:
-            logging.exception("Error in get_tile_info()")
+            logger.exception("Error in get_tile_info()")
             return QVariant({})
 
     @pyqtSlot(result=bool)
@@ -489,7 +488,7 @@ class CommunicationBridge(QObject):
         try:
             return self._tile_service.clear_tile_cache()
         except Exception:
-            logging.exception("Error clearing tile cache")
+            logger.exception("Error clearing tile cache")
             return False
 
     @pyqtSlot(result="QVariant")
@@ -498,7 +497,7 @@ class CommunicationBridge(QObject):
         try:
             return self._poi_service.get_pois()
         except Exception:
-            logging.exception("Error getting POIs")
+            logger.exception("Error getting POIs")
             return []
 
     @pyqtSlot(str, "QVariantList", result=bool)
@@ -508,7 +507,7 @@ class CommunicationBridge(QObject):
             self._poi_service.add_poi(name, coords)
             self._emit_pois()
         except Exception:
-            logging.exception("Error adding POI")
+            logger.exception("Error adding POI")
             return False
         else:
             return True
@@ -520,7 +519,7 @@ class CommunicationBridge(QObject):
             self._poi_service.remove_poi(name)
             self._emit_pois()
         except Exception:
-            logging.exception("Error removing POI")
+            logger.exception("Error removing POI")
             return False
         else:
             return True
@@ -532,7 +531,7 @@ class CommunicationBridge(QObject):
             self._poi_service.rename_poi(old_name, new_name)
             self._emit_pois()
         except Exception:
-            logging.exception("Error renaming POI")
+            logger.exception("Error renaming POI")
             return False
         else:
             return True
@@ -570,7 +569,7 @@ class CommunicationBridge(QObject):
         try:
             self._drone_data_manager.clear_frequency_data(frequency)
         except Exception:
-            logging.exception("Error clearing frequency data")
+            logger.exception("Error clearing frequency data")
             return False
         else:
             return True
@@ -581,7 +580,7 @@ class CommunicationBridge(QObject):
         try:
             self._drone_data_manager.clear_all_frequency_data()
         except Exception:
-            logging.exception("Error clearing all frequency data")
+            logger.exception("Error clearing all frequency data")
             return False
         else:
             return True
@@ -591,31 +590,31 @@ class CommunicationBridge(QObject):
     # --------------------------------------------------------------------------
     def _sync_timeout_check(self) -> None:
         if not self._sync_response_received:
-            logging.warning("Sync response not received => sync_timeout.")
+            logger.warning("Sync response not received => sync_timeout.")
             self.sync_timeout.emit()
             self._sync_response_received = True
 
     def _config_timeout_check(self) -> None:
         if not self._config_response_received:
-            logging.warning("Config response not received => config_timeout.")
+            logger.warning("Config response not received => config_timeout.")
             self.config_timeout.emit()
             self._config_response_received = True
 
     def _start_timeout_check(self) -> None:
         if not self._start_response_received:
-            logging.warning("Start response not received => start_timeout.")
+            logger.warning("Start response not received => start_timeout.")
             self.start_timeout.emit()
             self._start_response_received = True
 
     def _stop_timeout_check(self) -> None:
         if not self._stop_response_received:
-            logging.warning("Stop response not received => stop_timeout.")
+            logger.warning("Stop response not received => stop_timeout.")
             self.stop_timeout.emit()
             self._stop_response_received = True
 
     def _disconnect_timeout_check(self) -> None:
         if not self._disconnect_response_received:
-            logging.warning("Stop response not received => forcibly cleanup => disconnect_timeout.")
+            logger.warning("Stop response not received => forcibly cleanup => disconnect_timeout.")
             self.disconnect_failure.emit("Stop response not received => forcibly cleanup => disconnect_timeout.")
             self._cleanup()
             self._disconnect_response_received = True
@@ -628,7 +627,7 @@ class CommunicationBridge(QObject):
         self._sync_response_received = True
 
         if not rsp.success:
-            logging.warning("Sync success=False => Undefined behavior")
+            logger.warning("Sync success=False => Undefined behavior")
             self.sync_failure.emit("UNDEFINED BEHAVIOR: Sync failed.")
             self._state_machine.transition_to(DroneState.ERROR)
             return
@@ -642,7 +641,7 @@ class CommunicationBridge(QObject):
         self._config_response_received = True
 
         if not rsp.success:
-            logging.warning("Config success=False => Undefined behavior")
+            logger.warning("Config success=False => Undefined behavior")
             self.config_failure.emit("UNDEFINED BEHAVIOR: Config failed.")
             self._state_machine.transition_to(DroneState.ERROR)
             return
@@ -655,7 +654,7 @@ class CommunicationBridge(QObject):
         self._start_response_received = True
 
         if not rsp.success:
-            logging.warning("Start success=False => Improper state.")
+            logger.warning("Start success=False => Improper state.")
             self.start_failure.emit("UNDEFINED BEHAVIOR: Improper state.")
             self._state_machine.transition_to(DroneState.ERROR)
             return
@@ -670,7 +669,7 @@ class CommunicationBridge(QObject):
         self._stop_response_received = True
 
         if not rsp.success:
-            logging.warning("Stop success=False => Improper state.")
+            logger.warning("Stop success=False => Improper state.")
             self.stop_failure.emit("UNDEFINED BEHAVIOR: Improper state.")
             self._state_machine.transition_to(DroneState.ERROR)
             return
@@ -685,7 +684,7 @@ class CommunicationBridge(QObject):
         self._disconnect_response_received = True
 
         if not rsp.success:
-            logging.warning("Disconnect success=False => Improper state.")
+            logger.warning("Disconnect success=False => Improper state.")
             self.disconnect_failure.emit("UNDEFINED BEHAVIOR: Improper state.")
             self._state_machine.transition_to(DroneState.ERROR)
             return
@@ -699,10 +698,10 @@ class CommunicationBridge(QObject):
     # Ack callbacks from DroneComms
     # --------------------------------------------------------------------------
     def _on_ack_success(self, packet_id: int) -> None:
-        logging.info("Packet %d ack success", packet_id)
+        logger.info("Packet %d ack success", packet_id)
 
     def _on_ack_timeout(self, packet_id: int) -> None:
-        logging.warning("Ack timeout for packet %d", packet_id)
+        logger.warning("Ack timeout for packet %d", packet_id)
 
     # --------------------------------------------------------------------------
     # UTILS
@@ -729,7 +728,7 @@ class CommunicationBridge(QObject):
     @pyqtSlot(str)
     def log_message(self, message: str) -> None:
         """Log a message from the frontend."""
-        logging.info("Frontend log: %s", message)
+        logger.info("Frontend log: %s", message)
 
     # --------------------------------------------------------------------------
     # SIMULATOR
@@ -760,7 +759,7 @@ class CommunicationBridge(QObject):
             self._simulator_service.start()
             self.simulator_started.emit()
         except Exception:
-            logging.exception("Error initializing simulator")
+            logger.exception("Error initializing simulator")
             return False
         else:
             return True
@@ -780,7 +779,7 @@ class CommunicationBridge(QObject):
             self._simulator_service = None
             self.simulator_stopped.emit()
         except Exception:
-            logging.exception("Error cleaning up simulator")
+            logger.exception("Error cleaning up simulator")
             return False
         else:
             return True

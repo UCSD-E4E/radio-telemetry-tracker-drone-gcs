@@ -12,6 +12,8 @@ from radio_telemetry_tracker_drone_gcs.utils.paths import get_db_path
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+logger = logging.getLogger(__name__)
+
 DB_PATH = get_db_path()
 
 # Coordinate boundaries
@@ -21,7 +23,7 @@ MIN_LONGITUDE = -180
 MAX_LONGITUDE = 180
 
 @contextmanager
-def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
+def get_db_connection() -> Generator[sqlite3.Connection]:
     """Get a database connection with optimized settings."""
     conn = None
     try:
@@ -32,7 +34,7 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
         conn.execute("PRAGMA cache_size=-2000")  # Use 2MB of cache
         yield conn
     except sqlite3.Error:
-        logging.exception("Database error")
+        logger.exception("Database error")
         raise
     finally:
         if conn:
@@ -75,7 +77,7 @@ def init_db() -> None:
 
             conn.commit()
     except sqlite3.Error:
-        logging.exception("Error initializing POI database")
+        logger.exception("Error initializing POI database")
         raise
 
 
@@ -86,14 +88,14 @@ def list_pois_db() -> list[dict]:
             cursor = conn.execute("SELECT name, latitude, longitude FROM pois ORDER BY name")
             return [{"name": name, "coords": [lat, lng]} for name, lat, lng in cursor]
     except sqlite3.Error:
-        logging.exception("Error listing POIs")
+        logger.exception("Error listing POIs")
         return []
 
 
 def add_poi_db(name: str, lat: float, lng: float) -> bool:
     """Add or update a POI with validation."""
     if not (MIN_LATITUDE <= lat <= MAX_LATITUDE) or not (MIN_LONGITUDE <= lng <= MAX_LONGITUDE):
-        logging.error("Invalid coordinates: lat=%f, lng=%f", lat, lng)
+        logger.error("Invalid coordinates: lat=%f, lng=%f", lat, lng)
         return False
 
     try:
@@ -102,7 +104,7 @@ def add_poi_db(name: str, lat: float, lng: float) -> bool:
             conn.commit()
             return True
     except sqlite3.Error:
-        logging.exception("Error adding POI")
+        logger.exception("Error adding POI")
         return False
 
 
@@ -114,7 +116,7 @@ def remove_poi_db(name: str) -> bool:
             conn.commit()
             return cursor.rowcount > 0
     except sqlite3.Error:
-        logging.exception("Error removing POI")
+        logger.exception("Error removing POI")
         return False
 
 
@@ -128,12 +130,12 @@ def rename_poi_db(old: str, new: str) -> bool:
             # Check if new name already exists
             cursor = conn.execute("SELECT 1 FROM pois WHERE name = ?", (new,))
             if cursor.fetchone() and old.lower() != new.lower():
-                logging.error("POI with name '%s' already exists", new)
+                logger.error("POI with name '%s' already exists", new)
                 return False
 
             cursor = conn.execute("UPDATE pois SET name = ? WHERE name = ?", (new, old))
             conn.commit()
             return cursor.rowcount > 0
     except sqlite3.Error:
-        logging.exception("Error renaming POI")
+        logger.exception("Error renaming POI")
         return False

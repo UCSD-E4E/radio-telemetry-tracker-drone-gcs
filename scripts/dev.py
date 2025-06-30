@@ -3,11 +3,18 @@
 Automatically builds the frontend, then runs the Python main entry point.
 """
 
+import sys
+
 from radio_telemetry_tracker_drone_gcs.main import main as app_main
-from scripts.utils import build_frontend
+
+from .utils import build_frontend
 
 
-def main() -> None:
+def main() -> int:
     """Build frontend and run the app in development mode."""
     build_frontend()
-    app_main()
+    return app_main()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

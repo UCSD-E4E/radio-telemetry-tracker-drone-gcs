@@ -7,10 +7,12 @@ from contextlib import contextmanager
 
 from radio_telemetry_tracker_drone_gcs.utils.paths import get_db_path
 
+logger = logging.getLogger(__name__)
+
 DB_PATH = get_db_path()
 
 @contextmanager
-def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
+def get_db_connection() -> Generator[sqlite3.Connection]:
     """Get a database connection with optimized settings."""
     conn = None
     try:
@@ -21,7 +23,7 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
         conn.execute("PRAGMA cache_size=-2000")  # Use 2MB of cache
         yield conn
     except sqlite3.Error:
-        logging.exception("Database error")
+        logger.exception("Database error")
         raise
     finally:
         if conn:
@@ -64,7 +66,7 @@ def init_db() -> None:
 
             conn.commit()
     except sqlite3.Error:
-        logging.exception("Error initializing database")
+        logger.exception("Error initializing database")
         raise
 
 def add_tracking_session(name: str, date: str) -> int:
@@ -78,7 +80,7 @@ def add_tracking_session(name: str, date: str) -> int:
             conn.commit()
             return cursor.lastrowid
     except sqlite3.Error:
-        logging.exception("Error adding tracking session")
+        logger.exception("Error adding tracking session")
         return -1
 
 def add_frequency(# noqa: PLR0913
@@ -100,7 +102,7 @@ def add_frequency(# noqa: PLR0913
             conn.commit()
             return True
     except sqlite3.Error:
-        logging.exception("Error adding frequency data")
+        logger.exception("Error adding frequency data")
         return False
 
 def save_frequencies_to_session(session_name: str, session_date: str, frequencies: list[dict]) -> int:
@@ -120,7 +122,7 @@ def save_frequencies_to_session(session_name: str, session_date: str, frequencie
             timestamp=freq["timestamp"],
         )
         if not success:
-            logging.error("Failed to add frequency data for session %s", session_name)
+            logger.error("Failed to add frequency data for session %s", session_name)
             return -1
 
     return session_id
@@ -135,10 +137,10 @@ def get_session_id_by_name(session_name: str) -> int:
             row = cursor.fetchone()
             if row:
                 return row[0]
-            logging.error("Session with name '%s' not found.", session_name)
+            logger.error("Session with name '%s' not found.", session_name)
             return -1
     except sqlite3.Error:
-        logging.exception("Error retrieving session ID by name")
+        logger.exception("Error retrieving session ID by name")
         return -1
 
 def get_frequencies_by_session(session_name: str) -> list[dict]:
@@ -167,7 +169,7 @@ def get_frequencies_by_session(session_name: str) -> list[dict]:
                 for freq in frequencies
             ]
     except sqlite3.Error:
-        logging.exception("Error retrieving frequency data for session")
+        logger.exception("Error retrieving frequency data for session")
         return []
 
 def get_all_session_names() -> list[str]:
@@ -180,5 +182,5 @@ def get_all_session_names() -> list[str]:
             rows = cursor.fetchall()
             return [row[0] for row in rows]
     except sqlite3.Error:
-        logging.exception("Error retrieving session names")
+        logger.exception("Error retrieving session names")
         return []

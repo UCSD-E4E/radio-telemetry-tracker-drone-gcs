@@ -3,7 +3,7 @@ import React, { useState, useContext } from "react";
 import { GlobalAppContext } from "../../../context/globalAppContextDef";
 import Card from "../../common/Card";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import type { FrequencyData, TrackingSession } from '../../../types/global';
+import type { FrequencyData, TrackingSession, PingData } from '../../../types/global';
 
 
 const TrackingSessionComponent: React.FC = () => {
@@ -26,7 +26,7 @@ const TrackingSessionComponent: React.FC = () => {
 
     const convertFrequencyDataToTrackingSession = (frequencyData: FrequencyData): TrackingSession => {
         return Object.entries(frequencyData).flatMap(([freq, data]) =>
-            data.pings.map((ping) => ({
+            data.pings.map((ping: PingData) => ({
                 frequency: Number(freq),
                 data_type: "ping",
                 latitude: ping.lat,
