@@ -192,7 +192,8 @@ const FrequencyLayer: React.FC<FrequencyLayerProps> = ({
         };
     }, [map, frequency, locationEstimate, visible_location_estimate, frequencyColor]);
 
-    return null;
+    return null; 
+
 };
 
 const DroneMarker: React.FC<{
@@ -325,7 +326,7 @@ const DataLayers: React.FC = () => {
     const context = useContext(GlobalAppContext);
     if (!context) throw new Error('DataLayers must be in GlobalAppProvider');
 
-    const { gpsData, connectionStatus, frequencyData, frequencyVisibility } = context;
+    const { gpsData, connectionStatus, frequencyData, frequencyVisibility, frequencyData1, frequencyVisibility1 } = context;
     const [isLoading, setIsLoading] = useState(false);
     const loadingTimeoutRef = useRef<TimeoutRef | null>(null);
     const map = useMap();
@@ -356,10 +357,24 @@ const DataLayers: React.FC = () => {
         };
     }, [map]);
 
+
     return (
         <>
             <LoadingIndicator loading={isLoading} />
             <DroneMarker gpsData={gpsData} isConnected={connectionStatus === 1} />
+
+            {/* Actual layers rendering */}
+            {(frequencyVisibility1 ?? []).map(({ frequency, visible_pings }) => (
+                <FrequencyLayer
+                    key={frequency}
+                    frequency={frequency}
+                    pings={frequencyData1[frequency]?.pings || []}
+                    locationEstimate={frequencyData1[frequency]?.locationEstimate || null}
+                    visible_pings={visible_pings} 
+                    visible_location_estimate={true}
+                />
+            ))}
+
             {frequencyVisibility.map(({ frequency, visible_pings, visible_location_estimate }) => (
                 <FrequencyLayer
                     key={frequency}
@@ -370,8 +385,13 @@ const DataLayers: React.FC = () => {
                     visible_location_estimate={visible_location_estimate}
                 />
             ))}
+
+
+
         </>
     );
 };
 
 export default DataLayers;
+
+

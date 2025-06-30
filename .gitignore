@@ -29,6 +29,8 @@ venv/
 ENV/
 ruff_cache/
 poetry.lock
+uv.lock
+.ruff_cache/
 
 # Node/Frontend
 radio_telemetry_tracker_drone_gcs/frontend_dist

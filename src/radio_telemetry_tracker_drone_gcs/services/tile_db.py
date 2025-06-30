@@ -14,6 +14,8 @@ from radio_telemetry_tracker_drone_gcs.utils.paths import ensure_app_dir, get_db
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+logger = logging.getLogger(__name__)
+
 ensure_app_dir()  # Ensure app directory exists
 DB_PATH = get_db_path()
 
@@ -50,7 +52,7 @@ def _return_connection(conn: sqlite3.Connection) -> None:
 
 
 @contextmanager
-def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
+def get_db_connection() -> Generator[sqlite3.Connection]:
     """Get a database connection from the pool."""
     conn = None
     try:
@@ -61,7 +63,7 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
         conn.execute("PRAGMA cache_size=-2000")
         yield conn
     except sqlite3.Error:
-        logging.exception("Database error")
+        logger.exception("Database error")
         raise
     finally:
         if conn:
@@ -79,7 +81,7 @@ def get_tile_db(z: int, x: int, y: int, source: str) -> bytes | None:
             row = cursor.fetchone()
             return row[0] if row else None
     except sqlite3.Error:
-        logging.exception("Error retrieving tile")
+        logger.exception("Error retrieving tile")
         return None
 
 
@@ -94,7 +96,7 @@ def store_tile_db(z: int, x: int, y: int, source: str, data: bytes) -> bool:
             conn.commit()
             return True
     except sqlite3.Error:
-        logging.exception("Error storing tile")
+        logger.exception("Error storing tile")
         return False
 
 
@@ -106,7 +108,7 @@ def clear_tile_cache_db() -> int:
             conn.commit()
             return cursor.rowcount
     except sqlite3.Error:
-        logging.exception("Error clearing tile cache")
+        logger.exception("Error clearing tile cache")
         return 0
 
 
@@ -121,7 +123,7 @@ def get_tile_info_db() -> dict:
                 "total_size_mb": round(size / (1024 * 1024), 2),
             }
     except sqlite3.Error:
-        logging.exception("Error getting tile info")
+        logger.exception("Error getting tile info")
         return {"total_tiles": 0, "total_size_mb": 0.0}
 
 
@@ -176,5 +178,5 @@ def init_db() -> None:
 
             conn.commit()
     except sqlite3.Error:
-        logging.exception("Error initializing database")
+        logger.exception("Error initializing database")
         raise

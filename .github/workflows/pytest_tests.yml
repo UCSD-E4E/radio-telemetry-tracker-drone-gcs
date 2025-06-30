@@ -12,35 +12,41 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo add-apt-repository ppa:ettusresearch/uhd
+          sudo apt update
+          sudo apt install -y \
+            fftw-dev \
+            libboost-all-dev \
+            libuhd-dev \
+            uhd-host \
+            libairspy-dev \
+            libhackrf-dev \
+            cmake \
+            build-essential
 
       - name: Set up Python 3.13
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      - name: Install Qt dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libegl1 libxkbcommon-x11-0 libxcb-icccm4 \
-            libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
-            libxcb-xinerama0 libxcb-xfixes0 x11-utils xvfb
-
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/pypoetry
+            ~/.cache/uv
             ~/.cache/pip
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-uv-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --with dev
+          pip install uv
 
       - name: Run tests
         env:
@@ -49,4 +55,4 @@ jobs:
         run: |
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
           sleep 3
-          poetry run pytest
+          uv run pytest

@@ -11,6 +11,7 @@ from radio_telemetry_tracker_drone_gcs.services.poi_db import (
     rename_poi_db,
 )
 
+logger = logging.getLogger(__name__)
 
 class PoiService:
     """Manages POI retrieval, creation, removal, rename, etc."""
@@ -36,7 +37,7 @@ class PoiService:
         try:
             return add_poi_db(name, coords[0], coords[1])
         except Exception:
-            logging.exception("Error adding POI")
+            logger.exception("Error adding POI")
             return False
 
     def remove_poi(self, name: str) -> bool:
@@ -51,7 +52,7 @@ class PoiService:
         try:
             return remove_poi_db(name)
         except Exception:
-            logging.exception("Error removing POI")
+            logger.exception("Error removing POI")
             return False
 
     def rename_poi(self, old_name: str, new_name: str) -> bool:
@@ -67,5 +68,5 @@ class PoiService:
         try:
             return rename_poi_db(old_name, new_name)
         except Exception:
-            logging.exception("Error renaming POI")
+            logger.exception("Error renaming POI")
             return False

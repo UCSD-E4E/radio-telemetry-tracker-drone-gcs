@@ -5,10 +5,14 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+logger = logging.getLogger(__name__)
 
 class DroneState(Enum):
     """Enum representing possible drone states."""
@@ -116,7 +120,7 @@ class DroneStateMachine(QObject):
                 try:
                     self._timeout_handlers[current_state]()
                 except Exception:
-                    logging.exception("Error in timeout handler")
+                    logger.exception("Error in timeout handler")
 
     def transition_to(self, new_state: DroneState, transition: StateTransition | None = None) -> None:
         """Transition to a new state.
@@ -130,20 +134,20 @@ class DroneStateMachine(QObject):
                 f"Invalid state transition from {self._current_state} to {new_state}. "
                 f"Expected from state: {transition.from_state}"
             )
-            logging.error(error_msg)
+            logger.error(error_msg)
             self.state_error.emit(error_msg)
             return
 
         old_state = self._current_state
         self._current_state = new_state
-        logging.info("State transition: %s -> %s", old_state, new_state)
+        logger.info("State transition: %s -> %s", old_state, new_state)
 
         if new_state in self._transition_handlers:
             try:
                 self._transition_handlers[new_state]()
             except Exception as e:
                 error_msg = f"Error in transition handler: {e}"
-                logging.exception(error_msg)
+                logger.exception(error_msg)
                 self.state_error.emit(error_msg)
                 return
 
@@ -159,6 +163,6 @@ class DroneStateMachine(QObject):
             try:
                 self._error_handlers[self._current_state](error_msg)
             except Exception:
-                logging.exception("Error in error handler")
+                logger.exception("Error in error handler")
 
         self.state_error.emit(error_msg)
