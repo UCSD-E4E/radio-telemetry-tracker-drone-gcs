@@ -62,12 +62,13 @@ def build_frontend() -> Path:
         if result.stderr:
             logger.warning("npm build warnings/errors:\n%s", result.stderr)
     except subprocess.CalledProcessError as e:
-        logger.error("npm build failed with exit code %d", e.returncode)
+        logger.exception("npm build failed with exit code %d", e.returncode)
         if e.stdout:
-            logger.error("stdout:\n%s", e.stdout)
+            logger.exception("stdout:\n%s", e.stdout)
         if e.stderr:
-            logger.error("stderr:\n%s", e.stderr)
-        raise RuntimeError(f"Frontend build failed: {e}") from e
+            logger.exception("stderr:\n%s", e.stderr)
+        msg = f"Frontend build failed: {e}"
+        raise RuntimeError(msg) from e
 
     # Verify the build output exists
     dist_dir = frontend_dir / "dist"
