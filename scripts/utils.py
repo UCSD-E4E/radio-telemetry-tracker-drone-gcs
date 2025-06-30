@@ -55,11 +55,19 @@ def build_frontend() -> Path:
         raise ValueError(msg)
 
     logger.info("Building frontend...")
-    result = subprocess.run(build_cmd, cwd=frontend_dir, check=True, capture_output=True, text=True)  # noqa: S603
-    if result.stdout:
-        logger.info("npm build output:\n%s", result.stdout)
-    if result.stderr:
-        logger.warning("npm build warnings/errors:\n%s", result.stderr)
+    try:
+        result = subprocess.run(build_cmd, cwd=frontend_dir, check=True, capture_output=True, text=True)  # noqa: S603
+        if result.stdout:
+            logger.info("npm build output:\n%s", result.stdout)
+        if result.stderr:
+            logger.warning("npm build warnings/errors:\n%s", result.stderr)
+    except subprocess.CalledProcessError as e:
+        logger.error("npm build failed with exit code %d", e.returncode)
+        if e.stdout:
+            logger.error("stdout:\n%s", e.stdout)
+        if e.stderr:
+            logger.error("stderr:\n%s", e.stderr)
+        raise RuntimeError(f"Frontend build failed: {e}") from e
 
     # Verify the build output exists
     dist_dir = frontend_dir / "dist"

@@ -21,7 +21,7 @@
 - **Operating System**: Windows 10/11, Ubuntu 22.04+ (or similar)
 - **Python**: 3.13+ (required for all installation methods)
 - **Additional Build Requirements** (only if building from source):
-  - Poetry 2.0+
+  - UV 0.1.0+
   - Node.js 22+
   - npm 10+
 
@@ -51,10 +51,11 @@ git clone https://github.com/UCSD-E4E/radio-telemetry-tracker-drone-gcs.git
 
 cd radio-telemetry-tracker-drone-gcs
 ```
+
 2. Install Python dependencies:
 
 ```bash
-poetry install
+uv sync
 ```
 
 3. Build and install frontend:
@@ -76,8 +77,9 @@ cp -r frontend/dist/ radio_telemetry_tracker_drone_gcs/frontend_dist/
 5. Run the application:
 
 ```bash
-poetry run rtt-drone-gcs
+uv run rtt-drone-gcs
 ```
+
 ## Development
 
 ### Setting Up Development Environment
@@ -86,7 +88,7 @@ poetry run rtt-drone-gcs
 2. Install additional development dependencies:
 
 ```bash
-poetry install --dev
+uv sync --group dev
 ```
 
 ### Development Commands
@@ -94,21 +96,15 @@ poetry install --dev
 - **Run with automatic frontend building** (Recommended for development):
 
 ```bash
-poetry run rtt-drone-gcs-dev
+uv run python -m scripts.dev
 ```
+
+This command will automatically build the frontend and copy it to the correct location before running the app.
 
 - **Run without automatic frontend building** (Useful for testing):
 
 ```bash
-poetry run rtt-drone-gcs
-```
-
-his command will automatically build the frontend and copy it to the correct location before running the app.
-
-- **Run with pre-built frontend** (Faster, but requires manual frontend updates):
-
-```bash
-poetry run rtt-drone-gcs
+uv run rtt-drone-gcs
 ```
 
 ⚠️ Remember to rebuild and copy the frontend files when making frontend changes!
@@ -116,13 +112,13 @@ poetry run rtt-drone-gcs
 - **Run tests**:
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 - **Run linter**:
 
 ```bash
-poetry run ruff check .
+uv run ruff check .
 ```
 
 - **Run frontend tests**:
@@ -140,7 +136,7 @@ npm run test
    - If using `rtt-drone-gcs`, ensure you've:
      1. Built the frontend (`npm run build` in frontend directory)
      2. Copied the build to `radio_telemetry_tracker_drone_gcs/frontend_dist`
-   - Alternatively, use `rtt-drone-gcs-dev` which handles this automatically
+   - Alternatively, use `uv run python -m scripts.dev` which handles this automatically
    - Try reinstalling the package
 
 2. **Connection Issues**
@@ -155,7 +151,7 @@ npm run test
 
 4. **Build Errors**
    - Verify Python 3.13+ is installed and active
-   - Ensure all dependencies are installed (`poetry install`)
+   - Ensure all dependencies are installed (`uv sync`)
    - Check Node.js version (22+) if building frontend
    - Make sure frontend dist is in the correct location
 
