@@ -70,8 +70,7 @@ jobs:
             libxext6 \
             libxrender1 \
             libxss1 \
-            libgconf-2-4 \
-            libasound2 \
+            libasound2t64 \
             libdbus-1-3 \
             libfontconfig1 \
             libnss3 \
@@ -81,7 +80,6 @@ jobs:
             libxi6 \
             libxtst6 \
             libxrandr2 \
-            libasound2 \
             libpangocairo-1.0-0 \
             libatk1.0-0 \
             libcairo-gobject2 \
