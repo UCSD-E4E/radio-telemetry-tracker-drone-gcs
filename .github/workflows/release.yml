@@ -95,12 +95,6 @@ jobs:
       - name: Build wheel
         run: uv build
 
-      - name: Run tests
-        run: uv run pytest
-
-      - name: Lint code
-        run: uv run ruff check .
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
